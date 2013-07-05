@@ -135,14 +135,13 @@ static zval* pmtaconn_read_property(zval* object, zval* member, int type ZLK_DC 
 		return zend_get_std_object_handlers()->read_property(object, member, type ZLK_CC TSRMLS_CC);
 	}
 
-	ret = pmtaconn_read_property_internal(obj, member, type);
-
 	if (UNEXPECTED(Z_TYPE_P(member) != IS_STRING)) {
 		ZVAL_ZVAL(&tmp, member, 1, 0);
 		convert_to_string(&tmp);
 		member = &tmp;
 	}
 
+	ret = pmtaconn_read_property_internal(obj, member, type TSRMLS_CC);
 
 	if (UNEXPECTED(member == &tmp)) {
 		zval_dtor(&tmp);
