@@ -78,9 +78,13 @@
 #endif
 
 #if PHP_VERSION_ID > 50399
-#	define ZLK , const struct _zend_literal* key
+#	define ZLK_DC , const struct _zend_literal* key
+#	define ZLK_CC , key
+#	define ZLK_NULL , NULL
 #else
-#	define ZLK
+#	define ZLK_DC
+#	define ZLK_CC
+#	define ZLK_NULL
 #endif
 
 #define ISSTR(pzv, str) ((Z_STRLEN_P(pzv) == strlen(str)) && !strcmp(Z_STRVAL_P(pzv), str))

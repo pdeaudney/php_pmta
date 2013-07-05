@@ -5,7 +5,7 @@
  * @brief @c PmtaConnection class (implementation)
  * @details @c PmtaConnection class implementation
 <PRE>
-final class PmtaConnection
+class PmtaConnection
 {
 	const LOCAL_SERVER = "127.0.0.1";
 	const DEFAULT_PORT = 25;
@@ -96,18 +96,9 @@ static inline struct pmtaconn_object* fetchPmtaConnObject(zval* zobj TSRMLS_DC)
 	return (struct pmtaconn_object*)zend_objects_get_address(zobj TSRMLS_CC);
 }
 
-static zval* pmtaconn_read_property(zval* object, zval* member, int type ZLK TSRMLS_DC)
+static zval* pmtaconn_read_property_internal(struct pmtaconn_object* obj, zval* member, int type TSRMLS_DC)
 {
-	zval tmp;
 	zval* ret;
-	struct pmtaconn_object* obj = fetchPmtaConnObject(object TSRMLS_CC);
-
-	if (UNEXPECTED(Z_TYPE_P(member) != IS_STRING)) {
-		ZVAL_ZVAL(&tmp, member, 1, 0);
-		convert_to_string(&tmp);
-		member = &tmp;
-	}
-
 	MAKE_STD_ZVAL(ret);
 
 	if (ISSTR(member, "server")) {
@@ -123,11 +114,35 @@ static zval* pmtaconn_read_property(zval* object, zval* member, int type ZLK TSR
 		ZVAL_LONG(ret, obj->port);
 	}
 	else {
-		php_error_docref(NULL TSRMLS_CC, E_NOTICE, "Undefined property %s", Z_STRVAL_P(member));
+		if (type != BP_VAR_IS) {
+			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Undefined property PmtaConnection::%s", Z_STRVAL_P(member));
+		}
+
 		ZVAL_NULL(ret);
 	}
 
 	Z_SET_REFCOUNT_P(ret, 0);
+	return ret;
+}
+
+static zval* pmtaconn_read_property(zval* object, zval* member, int type ZLK_DC TSRMLS_DC)
+{
+	zval tmp;
+	zval* ret;
+	struct pmtaconn_object* obj = fetchPmtaConnObject(object TSRMLS_CC);
+
+	if (obj->obj.ce->type != ZEND_INTERNAL_CLASS) {
+		return zend_get_std_object_handlers()->read_property(object, member, type ZLK_CC TSRMLS_CC);
+	}
+
+	ret = pmtaconn_read_property_internal(obj, member, type);
+
+	if (UNEXPECTED(Z_TYPE_P(member) != IS_STRING)) {
+		ZVAL_ZVAL(&tmp, member, 1, 0);
+		convert_to_string(&tmp);
+		member = &tmp;
+	}
+
 
 	if (UNEXPECTED(member == &tmp)) {
 		zval_dtor(&tmp);
@@ -136,111 +151,23 @@ static zval* pmtaconn_read_property(zval* object, zval* member, int type ZLK TSR
 	return ret;
 }
 
-static void pmtaconn_write_property(zval* object, zval* member, zval* value ZLK TSRMLS_DC)
+static int pmtaconn_has_property_internal(struct pmtaconn_object* obj, zval* member, int has_set_exists TSRMLS_DC)
 {
-	zval tmp;
-	struct pmtaconn_object* obj = fetchPmtaConnObject(object TSRMLS_CC);
-
-	if (UNEXPECTED(Z_TYPE_P(member) != IS_STRING)) {
-		ZVAL_ZVAL(&tmp, member, 1, 0);
-		convert_to_string(&tmp);
-		member = &tmp;
-	}
-
-	if (ISSTR(member, "server")) {
-		if (obj->server) {
-			efree(obj->server);
-		}
-
-		if (Z_TYPE_P(value) == IS_STRING) {
-			obj->server = estrndup(Z_STRVAL_P(value), Z_STRLEN_P(value));
-		}
-		else {
-			zval str;
-			ZVAL_ZVAL(&str, value, 1, 0);
-			convert_to_string(&str);
-			obj->server = Z_STRVAL(str);
-			/* do not call the destructor */
-		}
-	}
-	else if (ISSTR(member, "username")) {
-		if (obj->username) {
-			efree(obj->username);
-		}
-
-		if (Z_TYPE_P(value) == IS_STRING) {
-			obj->username = estrndup(Z_STRVAL_P(value), Z_STRLEN_P(value));
-		}
-		else {
-			zval str;
-			ZVAL_ZVAL(&str, value, 1, 0);
-			convert_to_string(&str);
-			obj->username = Z_STRVAL(str);
-			/* do not call the destructor */
-		}
-	}
-	else if (ISSTR(member, "password")) {
-		if (obj->password) {
-			efree(obj->password);
-		}
-
-		if (Z_TYPE_P(value) == IS_STRING) {
-			obj->password = estrndup(Z_STRVAL_P(value), Z_STRLEN_P(value));
-		}
-		else {
-			zval str;
-			ZVAL_ZVAL(&str, value, 1, 0);
-			convert_to_string(&str);
-			obj->password = Z_STRVAL(str);
-			/* do not call the destructor */
-		}
-	}
-	else if (ISSTR(member, "port")) {
-		if (Z_TYPE_P(value) == IS_LONG) {
-			obj->port = Z_DVAL_P(value);
-		}
-		else {
-			zval lval;
-			ZVAL_ZVAL(&lval, value, 1, 0);
-			convert_to_long(&lval);
-			obj->port = Z_DVAL(lval);
-			zval_dtor(&lval);
-		}
-	}
-	else {
-		php_error_docref(NULL TSRMLS_CC, E_NOTICE, "Undefined property %s", Z_STRVAL_P(member));
-	}
-
-	if (UNEXPECTED(member == &tmp)) {
-		zval_dtor(&tmp);
-	}
-}
-
-static int pmtaconn_has_property(zval* object, zval* member, int has_set_exists ZLK TSRMLS_DC)
-{
-	zval tmp;
-	int retval = 1;
-	struct pmtaconn_object* obj = fetchPmtaConnObject(object TSRMLS_CC);
-
-	if (UNEXPECTED(Z_TYPE_P(member) != IS_STRING)) {
-		ZVAL_ZVAL(&tmp, member, 1, 0);
-		convert_to_string(&tmp);
-		member = &tmp;
-	}
+	int retval;
 
 	if (ISSTR(member, "server")) {
 		if (1 == has_set_exists) { /* set */
-			retval = (obj->server != NULL);
+			retval = (obj->server != NULL && obj->server[0]);
 		}
 	}
 	else if (ISSTR(member, "username")) {
 		if (1 == has_set_exists) { /* set */
-			retval = (obj->username != NULL);
+			retval = (obj->username != NULL && obj->username[0]);
 		}
 	}
 	else if (ISSTR(member, "password")) {
 		if (1 == has_set_exists) { /* set */
-			retval = (obj->password != NULL);
+			retval = (obj->password != NULL && obj->password[0]);
 		}
 	}
 	else if (ISSTR(member, "port")) {
@@ -252,17 +179,23 @@ static int pmtaconn_has_property(zval* object, zval* member, int has_set_exists 
 		retval = 0;
 	}
 
-	if (UNEXPECTED(member == &tmp)) {
-		zval_dtor(&tmp);
-	}
-
 	return retval;
 }
 
-static void pmtaconn_unset_property(zval* object, zval* member ZLK TSRMLS_DC)
+/**
+ * @property object
+ * @property member
+ * @property has_set_exists 0 = isset(), 1 = empty()
+ */
+static int pmtaconn_has_property(zval* object, zval* member, int has_set_exists ZLK_DC TSRMLS_DC)
 {
 	zval tmp;
+	int retval = 1;
 	struct pmtaconn_object* obj = fetchPmtaConnObject(object TSRMLS_CC);
+
+	if (obj->obj.ce->type != ZEND_INTERNAL_CLASS) {
+		return zend_get_std_object_handlers()->has_property(object, member, has_set_exists ZLK_CC TSRMLS_CC);
+	}
 
 	if (UNEXPECTED(Z_TYPE_P(member) != IS_STRING)) {
 		ZVAL_ZVAL(&tmp, member, 1, 0);
@@ -270,31 +203,13 @@ static void pmtaconn_unset_property(zval* object, zval* member ZLK TSRMLS_DC)
 		member = &tmp;
 	}
 
-	if (ISSTR(member, "server")) {
-		if (obj->server) {
-			efree(obj->server);
-			obj->server = NULL;
-		}
-	}
-	else if (ISSTR(member, "username")) {
-		if (obj->username) {
-			efree(obj->username);
-			obj->username = NULL;
-		}
-	}
-	else if (ISSTR(member, "password")) {
-		if (obj->password) {
-			efree(obj->password);
-			obj->password = NULL;
-		}
-	}
-	else if (ISSTR(member, "port")) {
-		obj->port = 0;
-	}
+	retval = pmtaconn_has_property_internal(obj, member, has_set_exists TSRMLS_CC);
 
 	if (UNEXPECTED(member == &tmp)) {
 		zval_dtor(&tmp);
 	}
+
+	return retval;
 }
 
 static void pmtaconn_dtor(void* v TSRMLS_DC)
@@ -327,17 +242,6 @@ static zend_object_value pmtaconn_ctor(zend_class_entry* ce TSRMLS_DC)
 
 	return retval;
 }
-
-/**
- * @brief Class properties
- */
-static const struct props pmtaconn_properties[] = {
-	{ PHPPMTA_SL("connection"), PHPPMTA_SL("/**\n * PmtaConn — connection resource\n *\n * @var resource\n */") },
-	{ PHPPMTA_SL("server"),     PHPPMTA_SL("/**\n * Server we are connected to\n *\n  * @var string\n */") },
-	{ PHPPMTA_SL("port"),       PHPPMTA_SL("/**\n * Server port we are connected to\n *\n * @var int\n */") },
-	{ PHPPMTA_SL("username"),   PHPPMTA_SL("/**\n * Username to log in with\n *\n * @var string\n */") },
-	{ PHPPMTA_SL("password"),   PHPPMTA_SL("/**\n * Password to log in with\n *\n * @var string\n */") }
-};
 
 /**
  * @brief public function __construct($server = '127.0.0.1', $port = 25, $username = null, $password = null);
@@ -433,7 +337,16 @@ static PHP_METHOD(PmtaConnection, __construct)
  */
 static PHP_METHOD(PmtaConnection, __get)
 {
-	generic_get(pmtaconn_properties, PHPPMTA_NELEMS(pmtaconn_properties), pmta_conn_class, "PmtaConnection", INTERNAL_FUNCTION_PARAM_PASSTHRU);
+	zval* property;
+	zval* retval;
+
+	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &property)) {
+		RETURN_NULL();
+	}
+
+	retval = pmtaconn_read_property_internal(fetchPmtaConnObject(getThis() TSRMLS_CC), property, BP_VAR_R TSRMLS_CC);
+	Z_ADDREF_P(retval);
+	RETURN_ZVAL(retval, 1, 1);
 }
 
 /**
@@ -447,7 +360,15 @@ static PHP_METHOD(PmtaConnection, __get)
  */
 static PHP_METHOD(PmtaConnection, __isset)
 {
-	generic_isset(pmtaconn_properties, PHPPMTA_NELEMS(pmtaconn_properties), INTERNAL_FUNCTION_PARAM_PASSTHRU);
+	zval* property;
+	int retval;
+
+	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &property)) {
+		RETURN_NULL();
+	}
+
+	retval = pmtaconn_has_property_internal(fetchPmtaConnObject(getThis() TSRMLS_CC), property, 1 TSRMLS_CC);
+	RETURN_BOOL(retval);
 }
 
 
@@ -563,9 +484,7 @@ void pmtaconn_register_class(TSRMLS_D)
 	pmtaconn_object_handlers = *zend_get_std_object_handlers();
 	pmtaconn_object_handlers.clone_obj            = NULL;
 	pmtaconn_object_handlers.read_property        = pmtaconn_read_property;
-	pmtaconn_object_handlers.write_property       = pmtaconn_write_property;
 	pmtaconn_object_handlers.has_property         = pmtaconn_has_property;
-	pmtaconn_object_handlers.unset_property       = pmtaconn_unset_property;
 	pmtaconn_object_handlers.get_property_ptr_ptr = NULL;
 
 	zend_declare_class_constant_stringl(pmta_conn_class, PHPPMTA_SL("LOCAL_SERVER"), PHPPMTA_SL("127.0.0.1") TSRMLS_CC);
