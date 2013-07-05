@@ -42,7 +42,6 @@ PHP_INI_BEGIN()
 	STD_PHP_INI_ENTRY("pmta.password", NULL, PHP_INI_ALL, OnUpdateString, password, zend_pmta_globals, pmta_globals)
 PHP_INI_END()
 
-int le_pmta_connection;
 int le_pmta_message;
 int le_pmta_recipient;
 
@@ -96,7 +95,6 @@ static PHP_MINIT_FUNCTION(pmta)
 
 	REGISTER_INI_ENTRIES();
 
-	le_pmta_connection = zend_register_list_destructors_ex(pmta_connection_dtor, NULL, PMTA_CONNECTION_RES_NAME, module_number);
 	le_pmta_message    = zend_register_list_destructors_ex(pmta_message_dtor,    NULL, PMTA_MESSAGE_RES_NAME,    module_number);
 	le_pmta_recipient  = zend_register_list_destructors_ex(pmta_recipient_dtor,  NULL, PMTA_RECIPIENT_RES_NAME,  module_number);
 

@@ -76,6 +76,14 @@
 #	define PHPPMTA_STATIC
 #endif
 
+#if PHP_VERSION_ID > 50399
+#	define ZLK , const struct _zend_literal* key
+#else
+#	define ZLK
+#endif
+
+#define ISSTR(pzv, str) ((Z_STRLEN_P(pzv) == strlen(str)) && !strcmp(Z_STRVAL_P(pzv), str))
+
 /**
  * This structure is used internally to declare private class properties
  */
@@ -86,7 +94,6 @@ struct props {
 	int comment_len;  /**< PHPDoc comment length */
 };
 
-PHPPMTA_VISIBILITY_HIDDEN extern int le_pmta_connection; /**< PMTA Connection (PmtaConn) resource ID */
 PHPPMTA_VISIBILITY_HIDDEN extern int le_pmta_message;    /**< PMTA Message (PmtaMsg) resource ID */
 PHPPMTA_VISIBILITY_HIDDEN extern int le_pmta_recipient;  /**< PMTA Recipient (PmtaRcpt) resource ID */
 
@@ -127,7 +134,7 @@ extern zend_module_entry pmta_module_entry;
 #endif
 
 /**
- * This one is required by php/main/internal_functions.c when php_pmta is built staticly
+ * This one is required by php/main/internal_functions.c when php_pmta is built statically
  *
  * @headerfile php_pmta.h
  * @def phpext_pmta_ptr
