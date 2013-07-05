@@ -82,10 +82,6 @@ zend_function_entry pmta_error_class_methods[] = {
 
 void pmtaerror_register_class(TSRMLS_D)
 {
-	static const char pd_pmtaerror[]  = "/**\n * @package PMTA API Client\n * @author Vladimir Kolesnikov <vladimir@extrememember.com>\n * @since 0.1\n  *\n * PMTA Error Class\n */";
-	static const char pd_pmtaerrorc[] = "/**\n * @package PMTA API Client\n * @author Vladimir Kolesnikov <vladimir@extrememember.com>\n * @since 0.1\n  *\n * PMTA Connection Error Class\n */";
-	static const char pd_pmtaerrorr[] = "/**\n * @package PMTA API Client\n * @author Vladimir Kolesnikov <vladimir@extrememember.com>\n * @since 0.1\n  *\n * PMTA Recipient Error Class\n */";
-	static const char pd_pmtaerrorm[] = "/**\n * @package PMTA API Client\n * @author Vladimir Kolesnikov <vladimir@extrememember.com>\n * @since 0.1\n  *\n * PMTA Message Error Class\n */";
 	zend_class_entry e;
 
 	INIT_CLASS_ENTRY(e, "PmtaError", pmta_error_class_methods);
@@ -95,8 +91,6 @@ void pmtaerror_register_class(TSRMLS_D)
 #else
 	pmta_error_class = zend_register_internal_class_ex(&e, zend_exception_get_default(TSRMLS_C), NULL TSRMLS_CC);
 #endif
-	pmta_error_class->doc_comment     = zend_strndup(PHPPMTA_SL(pd_pmtaerror));
-	pmta_error_class->doc_comment_len = sizeof(pd_pmtaerror)-1;
 
 	zend_declare_class_constant_long(pmta_error_class, PHPPMTA_SL("OUT_OF_MEMORY"),    PmtaApiERROR_OutOfMemory     TSRMLS_CC);
 	zend_declare_class_constant_long(pmta_error_class, PHPPMTA_SL("ILLEGAL_STATE"),    PmtaApiERROR_IllegalState    TSRMLS_CC);
@@ -110,18 +104,12 @@ void pmtaerror_register_class(TSRMLS_D)
 	INIT_CLASS_ENTRY(e, "PmtaErrorConnection", pmta_error_class_methods);
 	pmta_error_connection_class                  = zend_register_internal_class_ex(&e, pmta_error_class, NULL TSRMLS_CC);
 	pmta_error_connection_class->ce_flags       |= ZEND_ACC_FINAL_CLASS;
-	pmta_error_connection_class->doc_comment     = zend_strndup(PHPPMTA_SL(pd_pmtaerrorc));
-	pmta_error_connection_class->doc_comment_len = sizeof(pd_pmtaerrorc)-1;
 
 	INIT_CLASS_ENTRY(e, "PmtaErrorRecipient", pmta_error_class_methods);
 	pmta_error_recipient_class                  = zend_register_internal_class_ex(&e, pmta_error_class, NULL TSRMLS_CC);
 	pmta_error_recipient_class->ce_flags       |= ZEND_ACC_FINAL_CLASS;
-	pmta_error_recipient_class->doc_comment     = zend_strndup(PHPPMTA_SL(pd_pmtaerrorr));
-	pmta_error_recipient_class->doc_comment_len = sizeof(pd_pmtaerrorr)-1;
 
 	INIT_CLASS_ENTRY(e, "PmtaErrorMessage", pmta_error_class_methods);
 	pmta_error_message_class                  = zend_register_internal_class_ex(&e, pmta_error_class, NULL TSRMLS_CC);
 	pmta_error_message_class->ce_flags       |= ZEND_ACC_FINAL_CLASS;
-	pmta_error_message_class->doc_comment     = zend_strndup(PHPPMTA_SL(pd_pmtaerrorm));
-	pmta_error_message_class->doc_comment_len = sizeof(pd_pmtaerrorc)-1;
 }

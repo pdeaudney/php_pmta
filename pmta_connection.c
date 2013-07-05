@@ -343,16 +343,13 @@ ZEND_RSRC_DTOR_FUNC(pmta_connection_dtor)
 
 void pmtaconn_register_class(TSRMLS_D)
 {
-	static const char pd_pmtaconnection[] = "/**\n * @package PMTA API Client\n * @author Vladimir Kolesnikov <vladimir@extrememember.com>\n * @since 0.1\n  *\n * PMTA Connection Class\n */";
 	zend_class_entry e;
 	size_t i;
 
 	INIT_CLASS_ENTRY(e, "PmtaConnection", pmta_conn_class_methods);
 
-	pmta_conn_class                  = zend_register_internal_class(&e TSRMLS_CC);
-	pmta_conn_class->ce_flags       |= ZEND_ACC_FINAL_CLASS;
-	pmta_conn_class->doc_comment     = zend_strndup(PHPPMTA_SL(pd_pmtaconnection));
-	pmta_conn_class->doc_comment_len = sizeof(pd_pmtaconnection)-1;
+	pmta_conn_class            = zend_register_internal_class(&e TSRMLS_CC);
+	pmta_conn_class->ce_flags |= ZEND_ACC_FINAL_CLASS;
 
 	for (i=0; i<PHPPMTA_NELEMS(pmtaconn_properties); ++i) {
 		zval* property;
