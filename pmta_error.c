@@ -39,7 +39,7 @@ final class PmtaErrorMessage    extends PmtaError {}
 /**
  * @brief A reference to @c RuntimeException class from the SPL
  */
-extern PHPAPI zend_class_entry *spl_ce_RuntimeException;
+extern PHPAPI zend_class_entry* spl_ce_RuntimeException;
 #endif
 
 /**
