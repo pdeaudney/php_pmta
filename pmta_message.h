@@ -60,13 +60,6 @@
 PHPPMTA_VISIBILITY_HIDDEN extern PmtaMsg getMessage(zval* object TSRMLS_DC);
 
 /**
- * @brief PMTA Message (PmtaMsg) resource destructor
- * @param res Resource
- * @param tsrm_ls Internally used by Zend
- */
-PHPPMTA_VISIBILITY_HIDDEN extern void pmta_message_dtor(zend_rsrc_list_entry* res TSRMLS_DC);
-
-/**
  * @brief Registers PmtaMessage class
  * @param tsrm_ls Internally used by Zend
  */

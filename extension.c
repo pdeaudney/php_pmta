@@ -95,8 +95,6 @@ static PHP_MINIT_FUNCTION(pmta)
 
 	REGISTER_INI_ENTRIES();
 
-	le_pmta_message    = zend_register_list_destructors_ex(pmta_message_dtor,    NULL, PMTA_MESSAGE_RES_NAME,    module_number);
-
 	pmtaconn_register_class(TSRMLS_C);
 	pmtaerror_register_class(TSRMLS_C);
 	pmtarcpt_register_class(TSRMLS_C);

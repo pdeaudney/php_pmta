@@ -50,7 +50,8 @@ final class PmtaMessage
 				return $this->$property;
 			}
 		}
-			trigger_error("Undefined property PmtaMessage::{$property}", E_WARNING);
+
+		trigger_error("Undefined property PmtaMessage::{$property}", E_WARNING);
 	}
 
 	public function __isset($property)
@@ -133,33 +134,304 @@ final class PmtaMessage
 #include "pmta_error.h"
 #include "pmta_common.h"
 
-/**
- * @brief Return PmtaMsg resource
- * @param object PmtaMessage object
- * @return PmtaMsg resource (@c $message property)
- */
+static zend_object_handlers pmtamsg_object_handlers;
+
+struct pmtamsg_object {
+	zend_object obj;
+	PmtaMsg msg;
+	char* originator;
+	char* envid;
+	char* vmta;
+	char* jobid;
+	zval* recipients;
+	int rettype;
+	int encoding;
+	int verp;
+};
+
+static inline struct pmtamsg_object* fetchPmtaMsgObject(zval* zobj TSRMLS_DC)
+{
+	return (struct pmtamsg_object*)zend_objects_get_address(zobj TSRMLS_CC);
+}
+
 PmtaMsg getMessage(zval* object TSRMLS_DC)
 {
-	PmtaMsg result;
-	zval* rv = zend_read_property(pmta_msg_class, object, PHPPMTA_SL("message"), 0 TSRMLS_CC);
-	ZEND_FETCH_RESOURCE_NO_RETURN(result, PmtaMsg, &rv, -1, PMTA_MESSAGE_RES_NAME, le_pmta_message);
-	return result;
+	return fetchPmtaMsgObject(object TSRMLS_CC)->msg;
+}
+
+static zval* pmtamsg_read_property_internal(struct pmtamsg_object* obj, zval* member, int type TSRMLS_DC)
+{
+	zval* ret;
+	MAKE_STD_ZVAL(ret);
+
+	if (ISSTR(member, "originator")) {
+		ZVAL_STRING(ret, obj->originator, 1);
+	}
+	else if (ISSTR(member, "envelope_id")) {
+		ZVAL_STRING(ret, obj->envid, 1);
+	}
+	else if (ISSTR(member, "vmta")) {
+		ZVAL_STRING(ret, obj->vmta, 1);
+	}
+	else if (ISSTR(member, "jobid")) {
+		ZVAL_STRING(ret, obj->jobid, 1);
+	}
+	else if (ISSTR(member, "encoding")) {
+		ZVAL_LONG(ret, obj->encoding);
+	}
+	else if (ISSTR(member, "return_type")) {
+		ZVAL_LONG(ret, obj->rettype);
+	}
+	else if (ISSTR(member, "verp")) {
+		ZVAL_LONG(ret, obj->verp);
+	}
+	else if (ISSTR(member, "recipients")) {
+		MAKE_COPY_ZVAL(&obj->recipients, ret);
+	}
+	else {
+		if (type != BP_VAR_IS) {
+			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Undefined property PmtaMessage::%s", Z_STRVAL_P(member));
+		}
+
+		ZVAL_NULL(ret);
+	}
+
+	assert(Z_REFCOUNT_P(ret) == 1);
+	Z_SET_REFCOUNT_P(ret, 0);
+	return ret;
+}
+
+static zval* pmtamsg_read_property(zval* object, zval* member, int type ZLK_DC TSRMLS_DC)
+{
+	zval tmp;
+	zval* ret;
+	struct pmtamsg_object* obj = fetchPmtaMsgObject(object TSRMLS_CC);
+
+	if (obj->obj.ce->type != ZEND_INTERNAL_CLASS) {
+		return zend_get_std_object_handlers()->read_property(object, member, type ZLK_CC TSRMLS_CC);
+	}
+
+	if (UNEXPECTED(Z_TYPE_P(member) != IS_STRING)) {
+		ZVAL_ZVAL(&tmp, member, 1, 0);
+		convert_to_string(&tmp);
+		member = &tmp;
+	}
+
+	ret = pmtamsg_read_property_internal(obj, member, type TSRMLS_CC);
+
+	if (UNEXPECTED(member == &tmp)) {
+		zval_dtor(&tmp);
+	}
+
+	return ret;
+}
+
+static int pmtamsg_has_property_internal(struct pmtamsg_object* obj, zval* member, int has_set_exists TSRMLS_DC)
+{
+	int retval = 1;
+
+	if (ISSTR(member, "originator")) {
+		if (1 == has_set_exists) {
+			retval = (obj->originator && obj->originator[0]);
+		}
+	}
+	else if (ISSTR(member, "envelope_id")) {
+		if (1 == has_set_exists) {
+			retval = (obj->envid && obj->envid[0]);
+		}
+	}
+	else if (ISSTR(member, "vmta")) {
+		if (1 == has_set_exists) {
+			retval = (obj->vmta && obj->vmta[0]);
+		}
+	}
+	else if (ISSTR(member, "jobid")) {
+		if (1 == has_set_exists) {
+			retval = (obj->jobid && obj->jobid[0]);
+		}
+	}
+	else if (ISSTR(member, "encoding")) {
+		if (1 == has_set_exists) {
+			retval = (obj->encoding != 0);
+		}
+	}
+	else if (ISSTR(member, "return_type")) {
+		if (1 == has_set_exists) {
+			retval = (obj->rettype != 0);
+		}
+	}
+	else if (ISSTR(member, "verp")) {
+		if (1 == has_set_exists) {
+			retval = (obj->verp != 0);
+		}
+	}
+	else if (ISSTR(member, "recipients")) {
+		if (1 == has_set_exists) {
+			retval = (obj->recipients && zend_hash_num_elements(Z_ARRVAL_P(obj->recipients)));
+		}
+	}
+	else {
+		retval = 0;
+	}
+
+	return retval;
 }
 
 /**
- * @brief @c PmtaMessage properties
+ * @property object
+ * @property member
+ * @property has_set_exists 0 = isset(), 1 = empty()
  */
-static const struct props pmtamsg_properties[] = {
-	{ PHPPMTA_SL("message"),     PHPPMTA_SL("/**\n * @property resource\n */") },
-	{ PHPPMTA_SL("originator"),  PHPPMTA_SL("/**\n * @property string\n */") },
-	{ PHPPMTA_SL("verp"),        PHPPMTA_SL("/**\n * @property bool\n */") },
-	{ PHPPMTA_SL("return_type"), PHPPMTA_SL("/**\n * @property int\n */") },
-	{ PHPPMTA_SL("envelope_id"), PHPPMTA_SL("/**\n * @property string\n */") },
-	{ PHPPMTA_SL("vmta"),        PHPPMTA_SL("/**\n * @property string\n */") },
-	{ PHPPMTA_SL("jobid"),       PHPPMTA_SL("/**\n * @property string\n */") },
-	{ PHPPMTA_SL("encoding"),    PHPPMTA_SL("/**\n * @property int\n */") },
-	{ PHPPMTA_SL("recipients"),  PHPPMTA_SL("/**\n * @property array\n */") }
-};
+static int pmtamsg_has_property(zval* object, zval* member, int has_set_exists ZLK_DC TSRMLS_DC)
+{
+	zval tmp;
+	int retval = 1;
+	struct pmtamsg_object* obj = fetchPmtaMsgObject(object TSRMLS_CC);
+
+	if (obj->obj.ce->type != ZEND_INTERNAL_CLASS) {
+		return zend_get_std_object_handlers()->has_property(object, member, has_set_exists ZLK_CC TSRMLS_CC);
+	}
+
+	if (UNEXPECTED(Z_TYPE_P(member) != IS_STRING)) {
+		ZVAL_ZVAL(&tmp, member, 1, 0);
+		convert_to_string(&tmp);
+		member = &tmp;
+	}
+
+	retval = pmtamsg_has_property_internal(obj, member, has_set_exists TSRMLS_CC);
+
+	if (UNEXPECTED(member == &tmp)) {
+		zval_dtor(&tmp);
+	}
+
+	return retval;
+}
+
+static void pmtamsg_write_property_internal(struct pmtamsg_object* obj, zval* member, zval* value TSRMLS_DC)
+{
+	BOOL res;
+
+	if (ISSTR(member, "encoding") || ISSTR(member, "return_type") || ISSTR(member, "verp")) {
+		long int v;
+		int* property;
+
+		if (Z_TYPE_P(value) == IS_LONG) {
+			v = Z_LVAL_P(value);
+		}
+		else {
+			zval lval;
+			ZVAL_ZVAL(&lval, value, 1, 0);
+			convert_to_long(&lval);
+			v = Z_LVAL(lval);
+			zval_dtor(&lval);
+		}
+
+		switch (Z_STRVAL_P(member)[0]) {
+			case 'e': res = PmtaMsgSetEncoding(obj->msg, (PmtaMsgENCODING)v); property = &obj->encoding; break;
+			case 'r': res = PmtaMsgSetReturnType(obj->msg, (PmtaMsgRETURN)v); property = &obj->rettype;  break;
+			case 'v': res = PmtaMsgSetVerp(obj->msg, v ? TRUE : FALSE);       property = &obj->verp;     break;
+			default:  res = FALSE; property = NULL; break;
+		}
+
+		if (FALSE == res) {
+			throw_pmta_error(pmta_error_message_class, PmtaMsgGetLastErrorType(obj->msg), PmtaMsgGetLastError(obj->msg), NULL TSRMLS_CC);
+		}
+		else {
+			*property = v;
+		}
+	}
+	else if (ISSTR(member, "envelope_id") || ISSTR(member, "vmta") || ISSTR(member, "jobid")) {
+		char* v;
+		char** property;
+
+		if (Z_TYPE_P(value) == IS_STRING) {
+			v = estrndup(Z_STRVAL_P(value), Z_STRLEN_P(value));
+		}
+		else {
+			zval str;
+			ZVAL_ZVAL(&str, value, 1, 0);
+			convert_to_string(&str);
+			v = Z_STRVAL(str);
+			/* Skipping zval_dtor because we stole the underlying pointer */
+		}
+
+		switch (Z_STRVAL_P(member)[0]) {
+			case 'e': res = PmtaMsgSetEnvelopeId(obj->msg, v); property = &obj->envid; break;
+			case 'v': res = PmtaMsgSetVirtualMta(obj->msg, v); property = &obj->vmta;  break;
+			case 'j': res = PmtaMsgSetJobId(obj->msg, v);      property = &obj->jobid; break;
+			default:  res = FALSE; property = NULL;
+		}
+
+		if (FALSE == res) {
+			throw_pmta_error(pmta_error_message_class, PmtaMsgGetLastErrorType(obj->msg), PmtaMsgGetLastError(obj->msg), NULL TSRMLS_CC);
+		}
+		else {
+			if (*property) {
+				efree(*property);
+			}
+
+			*property = v;
+		}
+	}
+	else {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Cannot set property PmtaMessage::%s", Z_STRVAL_P(member));
+	}
+}
+
+static void pmtamsg_write_property(zval* object, zval* member, zval* value ZLK_DC TSRMLS_DC)
+{
+	zval tmp;
+	struct pmtamsg_object* obj = fetchPmtaMsgObject(object TSRMLS_CC);
+
+	if (obj->obj.ce->type != ZEND_INTERNAL_CLASS) {
+		return zend_get_std_object_handlers()->write_property(object, member, value ZLK_CC TSRMLS_CC);
+	}
+
+	if (UNEXPECTED(Z_TYPE_P(member) != IS_STRING)) {
+		ZVAL_ZVAL(&tmp, member, 1, 0);
+		convert_to_string(&tmp);
+		member = &tmp;
+	}
+
+	pmtamsg_write_property_internal(obj, member, value TSRMLS_CC);
+
+	if (UNEXPECTED(member == &tmp)) {
+		zval_dtor(&tmp);
+	}
+}
+
+static void pmtamsg_dtor(void* v TSRMLS_DC)
+{
+	struct pmtamsg_object* obj = v;
+
+	if (obj->originator) { efree(obj->originator);          }
+	if (obj->envid)      { efree(obj->envid);               }
+	if (obj->jobid)      { efree(obj->jobid);               }
+	if (obj->vmta)       { efree(obj->vmta);                }
+	if (obj->recipients) { zval_ptr_dtor(&obj->recipients); }
+	if (obj->msg)        { PmtaMsgFree(obj->msg);           }
+
+	zend_object_std_dtor(&(obj->obj) TSRMLS_CC);
+	efree(obj);
+}
+
+static zend_object_value pmtamsg_ctor(zend_class_entry* ce TSRMLS_DC)
+{
+	struct pmtamsg_object* obj = ecalloc(1, sizeof(struct pmtamsg_object));
+	zend_object_value retval;
+
+	zend_object_std_init(&(obj->obj), ce TSRMLS_CC);
+	retval.handle = zend_objects_store_put(
+		obj,
+		(zend_objects_store_dtor_t)zend_objects_destroy_object,
+		pmtamsg_dtor,
+		NULL TSRMLS_CC
+	);
+
+	retval.handlers = &pmtamsg_object_handlers;
+
+	return retval;
+}
 
 /**
  * @param ht Internally used by Zend (number of arguments)
@@ -171,8 +443,7 @@ static const struct props pmtamsg_properties[] = {
  */
 static PHP_METHOD(PmtaMessage, __construct)
 {
-	zval* c;
-	PmtaMsg msg;
+	struct pmtamsg_object* obj;
 	char* originator;
 	int originator_len;
 	BOOL result;
@@ -181,29 +452,23 @@ static PHP_METHOD(PmtaMessage, __construct)
 		RETURN_NULL();
 	}
 
-	msg = PmtaMsgAlloc();
-	if (!msg) {
+	obj = fetchPmtaMsgObject(getThis() TSRMLS_CC);
+
+	obj->msg = PmtaMsgAlloc();
+	if (!obj->msg) {
 		throw_pmta_error(pmta_error_recipient_class, PmtaApiERROR_PHP_API, "PmtaMsgAlloc() failed", NULL TSRMLS_CC);
 		RETURN_NULL();
 	}
 
-	MAKE_STD_ZVAL(c);
-	ZEND_REGISTER_RESOURCE(c, msg, le_pmta_message);
-
-	zend_update_property(pmta_msg_class, getThis(), PHPPMTA_SL("message"), c TSRMLS_CC);
-	zval_ptr_dtor(&c);
-
-	result = PmtaMsgInit(msg, originator);
+	result = PmtaMsgInit(obj->msg, originator);
 	if (FALSE == result) {
-		throw_pmta_error(pmta_error_message_class, PmtaMsgGetLastErrorType(msg), PmtaMsgGetLastError(msg), NULL TSRMLS_CC);
+		throw_pmta_error(pmta_error_message_class, PmtaMsgGetLastErrorType(obj->msg), PmtaMsgGetLastError(obj->msg), NULL TSRMLS_CC);
 	}
 
-	zend_update_property_string(pmta_msg_class, getThis(), PHPPMTA_SL("originator"), originator TSRMLS_CC);
+	obj->originator = estrndup(originator, originator_len);
 
-	MAKE_STD_ZVAL(c);
-	array_init(c);
-	zend_update_property(pmta_msg_class, getThis(), PHPPMTA_SL("recipients"), c TSRMLS_CC);
-	zval_ptr_dtor(&c);
+	MAKE_STD_ZVAL(obj->recipients);
+	array_init(obj->recipients);
 }
 
 /**
@@ -216,7 +481,16 @@ static PHP_METHOD(PmtaMessage, __construct)
  */
 static PHP_METHOD(PmtaMessage, __get)
 {
-	generic_get(pmtamsg_properties, PHPPMTA_NELEMS(pmtamsg_properties), pmta_msg_class, "PmtaMessage", INTERNAL_FUNCTION_PARAM_PASSTHRU);
+	zval* property;
+	zval* retval;
+
+	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &property)) {
+		RETURN_NULL();
+	}
+
+	retval = pmtamsg_read_property_internal(fetchPmtaMsgObject(getThis() TSRMLS_CC), property, BP_VAR_R TSRMLS_CC);
+	Z_ADDREF_P(retval);
+	RETURN_ZVAL(retval, 1, 1);
 }
 
 /**
@@ -229,7 +503,15 @@ static PHP_METHOD(PmtaMessage, __get)
  */
 static PHP_METHOD(PmtaMessage, __isset)
 {
-	generic_isset(pmtamsg_properties, PHPPMTA_NELEMS(pmtamsg_properties), INTERNAL_FUNCTION_PARAM_PASSTHRU);
+	zval* property;
+	int retval;
+
+	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &property)) {
+		RETURN_NULL();
+	}
+
+	retval = pmtamsg_has_property_internal(fetchPmtaMsgObject(getThis() TSRMLS_CC), property, 1 TSRMLS_CC);
+	RETURN_BOOL(retval);
 }
 
 /**
@@ -242,65 +524,14 @@ static PHP_METHOD(PmtaMessage, __isset)
  */
 static PHP_METHOD(PmtaMessage, __set)
 {
-	PmtaMsg msg = getMessage(getThis() TSRMLS_CC);
-	char* property;
-	int property_len;
-	zval* val;
-	BOOL res;
+	zval* property;
+	zval* value;
 
-	ZEND_VERIFY_RESOURCE(msg);
-
-	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz", &property, &property_len, &val)) {
+	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz", &property, &value)) {
 		RETURN_NULL();
 	}
 
-	if (!strcmp(property, "verp")) {
-		convert_to_boolean(val);
-		res = PmtaMsgSetVerp(msg, Z_BVAL_P(val) ? TRUE : FALSE);
-	}
-	else if (!strcmp(property, "return_type")) {
-		convert_to_long(val);
-		res = PmtaMsgSetReturnType(msg, (PmtaMsgRETURN)(Z_LVAL_P(val)));
-	}
-	else if (!strcmp(property, "envelope_id")) {
-		convert_to_string(val);
-		res = PmtaMsgSetEnvelopeId(msg, Z_STRVAL_P(val));
-	}
-	else if (!strcmp(property, "vmta")) {
-		convert_to_string(val);
-		res = PmtaMsgSetVirtualMta(msg, Z_STRVAL_P(val));
-	}
-	else if (!strcmp(property, "jobid")) {
-		convert_to_string(val);
-		res = PmtaMsgSetJobId(msg, Z_STRVAL_P(val));
-	}
-	else if (!strcmp(property, "encoding")) {
-		convert_to_long(val);
-		res = PmtaMsgSetEncoding(msg, (PmtaMsgENCODING)(Z_LVAL_P(val)));
-	}
-	else {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Cannot set property PmtaMessage::%s", property);
-		RETURN_NULL();
-	}
-
-	if (FALSE == res) {
-		throw_pmta_error(pmta_error_message_class, PmtaMsgGetLastErrorType(msg), PmtaMsgGetLastError(msg), NULL TSRMLS_CC);
-	}
-	else {
-		zend_update_property(pmta_msg_class, getThis(), property, property_len, val TSRMLS_CC);
-	}
-}
-
-/**
- * @param ht Internally used by Zend (number of arguments)
- * @param return_value Internally used by Zend (return value)
- * @param return_value_ptr Internally used by Zend
- * @param this_ptr Internally used by Zend (@c $this)
- * @param return_value_used Internally used by Zend (whether the return value is used)
- * @param tsrm_ls Internally used by Zend
- */
-static PHP_METHOD(PmtaMessage, __clone)
-{
+	pmtamsg_write_property_internal(fetchPmtaMsgObject(getThis() TSRMLS_CC), property, value TSRMLS_CC);
 }
 
 /**
@@ -313,22 +544,18 @@ static PHP_METHOD(PmtaMessage, __clone)
  */
 static PHP_METHOD(PmtaMessage, beginPart)
 {
+	struct pmtamsg_object* obj;
 	PmtaMsg msg = getMessage(getThis() TSRMLS_CC);
 	long int part;
 	BOOL res;
-
-	ZEND_VERIFY_RESOURCE(msg);
 
 	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &part)) {
 		RETURN_NULL();
 	}
 
-	res = PmtaMsgBeginPart(msg, part);
-	if (TRUE == res) {
-		RETURN_TRUE;
-	}
-
-	RETURN_FALSE;
+	obj = fetchPmtaMsgObject(getThis() TSRMLS_CC);
+	res = PmtaMsgBeginPart(obj->msg, part);
+	RETURN_BOOL(TRUE == res ? 1 : 0);
 }
 
 /**
@@ -341,23 +568,18 @@ static PHP_METHOD(PmtaMessage, beginPart)
  */
 static PHP_METHOD(PmtaMessage, addData)
 {
-	PmtaMsg msg = getMessage(getThis() TSRMLS_CC);
+	struct pmtamsg_object* obj;
 	char* data;
 	int data_len;
 	BOOL res;
-
-	ZEND_VERIFY_RESOURCE(msg);
 
 	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &data, &data_len)) {
 		RETURN_NULL();
 	}
 
-	res = PmtaMsgAddData(msg, data, data_len);
-	if (TRUE == res) {
-		RETURN_TRUE;
-	}
-
-	RETURN_FALSE;
+	obj = fetchPmtaMsgObject(getThis() TSRMLS_CC);
+	res = PmtaMsgAddData(obj->msg, data, data_len);
+	RETURN_BOOL(TRUE == res ? 1 : 0);
 }
 
 /**
@@ -370,23 +592,18 @@ static PHP_METHOD(PmtaMessage, addData)
  */
 static PHP_METHOD(PmtaMessage, addMergeData)
 {
-	PmtaMsg msg = getMessage(getThis() TSRMLS_CC);
+	struct pmtamsg_object* obj;
 	char* data;
 	int data_len;
 	BOOL res;
-
-	ZEND_VERIFY_RESOURCE(msg);
 
 	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &data, &data_len)) {
 		RETURN_NULL();
 	}
 
-	res = PmtaMsgAddMergeData(msg, data, data_len);
-	if (TRUE == res) {
-		RETURN_TRUE;
-	}
-
-	RETURN_FALSE;
+	obj = fetchPmtaMsgObject(getThis() TSRMLS_CC);
+	res = PmtaMsgAddMergeData(obj->msg, data, data_len);
+	RETURN_BOOL(TRUE == res ? 1 : 0);
 }
 
 /**
@@ -399,17 +616,16 @@ static PHP_METHOD(PmtaMessage, addMergeData)
  */
 static PHP_METHOD(PmtaMessage, addDateHeader)
 {
-	PmtaMsg msg = getMessage(getThis() TSRMLS_CC);
+	struct pmtamsg_object* obj;
 	BOOL res;
 
-	ZEND_VERIFY_RESOURCE(msg);
-
-	res = PmtaMsgAddDateHeader(msg);
-	if (TRUE == res) {
-		RETURN_TRUE;
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_NULL();
 	}
 
-	RETURN_FALSE;
+	obj = fetchPmtaMsgObject(getThis() TSRMLS_CC);
+	res = PmtaMsgAddDateHeader(obj->msg);
+	RETURN_BOOL(TRUE == res ? 1 : 0);
 }
 
 /**
@@ -422,30 +638,25 @@ static PHP_METHOD(PmtaMessage, addDateHeader)
  */
 static PHP_METHOD(PmtaMessage, addRecipient)
 {
-	PmtaMsg msg = getMessage(getThis() TSRMLS_CC);
+	struct pmtamsg_object* obj;
 	PmtaRcpt rcpt;
 	zval* recipient;
 	BOOL res;
-
-	ZEND_VERIFY_RESOURCE(msg);
 
 	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "O", &recipient, pmta_rcpt_class)) {
 		RETURN_NULL();
 	}
 
+	obj  = fetchPmtaMsgObject(getThis() TSRMLS_CC);
 	rcpt = getRecipient(recipient TSRMLS_CC);
-	ZEND_VERIFY_RESOURCE(rcpt);
-
-	res = PmtaMsgAddRecipient(msg, rcpt);
+	res  = PmtaMsgAddRecipient(obj->msg, rcpt);
 	if (TRUE == res) {
-		zval* c = zend_read_property(pmta_msg_class, getThis(), PHPPMTA_SL("recipients"), 0 TSRMLS_CC);
 #ifdef Z_ADDREF_P
 		Z_ADDREF_P(recipient);
 #else
 		ZVAL_ADDREF(recipient);
 #endif
-		add_next_index_zval(c, recipient);
-		zend_update_property(pmta_msg_class, getThis(), PHPPMTA_SL("recipients"), c TSRMLS_CC);
+		add_next_index_zval(obj->recipients, recipient);
 		lock_recipient(recipient TSRMLS_CC);
 		RETURN_TRUE;
 	}
@@ -463,11 +674,13 @@ static PHP_METHOD(PmtaMessage, addRecipient)
  */
 static PHP_METHOD(PmtaMessage, getLastError)
 {
-	if (return_value_used) {
-		PmtaMsg msg = getMessage(getThis() TSRMLS_CC);
-		ZEND_VERIFY_RESOURCE(msg);
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_NULL();
+	}
 
-		throw_pmta_error(pmta_error_message_class, PmtaMsgGetLastErrorType(msg), PmtaMsgGetLastError(msg), &return_value TSRMLS_CC);
+	if (return_value_used) {
+		struct pmtamsg_object* obj = fetchPmtaMsgObject(getThis() TSRMLS_CC);
+		throw_pmta_error(pmta_error_message_class, PmtaMsgGetLastErrorType(obj->msg), PmtaMsgGetLastError(obj->msg), &return_value TSRMLS_CC);
 	}
 }
 
@@ -511,24 +724,14 @@ zend_function_entry pmta_msg_class_methods[] = {
 	PHP_ME(PmtaMessage, __get,            arginfo_get,          ZEND_ACC_PUBLIC)
 	PHP_ME(PmtaMessage, __set,            arginfo_set,          ZEND_ACC_PUBLIC)
 	PHP_ME(PmtaMessage, __isset,          arginfo_get,          ZEND_ACC_PUBLIC)
-	PHP_ME(PmtaMessage, __clone,          arginfo_empty,        ZEND_ACC_PRIVATE | ZEND_ACC_CLONE)
 	PHP_ME(PmtaMessage, beginPart,        arginfo_beginpart,    ZEND_ACC_PUBLIC)
 	PHP_ME(PmtaMessage, addData,          arginfo_adddata,      ZEND_ACC_PUBLIC)
 	PHP_ME(PmtaMessage, addMergeData,     arginfo_adddata,      ZEND_ACC_PUBLIC)
 	PHP_ME(PmtaMessage, addDateHeader,    arginfo_empty,        ZEND_ACC_PUBLIC)
 	PHP_ME(PmtaMessage, addRecipient,     arginfo_addrecipient, ZEND_ACC_PUBLIC)
 	PHP_ME(PmtaMessage, getLastError,     arginfo_empty,        ZEND_ACC_PUBLIC)
-
-	{ NULL, NULL, NULL, 0, 0 }
+	PHP_FE_END
 };
-
-ZEND_RSRC_DTOR_FUNC(pmta_message_dtor)
-{
-	PmtaMsg message = (PmtaMsg)rsrc->ptr;
-	if (message) {
-		PmtaMsgFree(message);
-	}
-}
 
 void pmtamsg_register_class(TSRMLS_D)
 {
@@ -537,20 +740,18 @@ void pmtamsg_register_class(TSRMLS_D)
 
 	INIT_CLASS_ENTRY(e, "PmtaMessage", pmta_msg_class_methods);
 
-	pmta_msg_class            = zend_register_internal_class(&e TSRMLS_CC);
-	pmta_msg_class->ce_flags |= ZEND_ACC_FINAL_CLASS;
+	pmta_msg_class = zend_register_internal_class(&e TSRMLS_CC);
 
-	for (i=0; i<PHPPMTA_NELEMS(pmtamsg_properties); ++i) {
-		zval* property;
-#ifdef ALLOC_PERMANENT_ZVAL
-		ALLOC_PERMANENT_ZVAL(property);
-#else
-		property = malloc(sizeof(zval));
-#endif
-		INIT_ZVAL(*property);
+	pmta_msg_class->create_object = pmtamsg_ctor;
+	pmta_msg_class->serialize     = zend_class_serialize_deny;
+	pmta_msg_class->unserialize   = zend_class_unserialize_deny;
 
-		zend_declare_property_ex(pmta_msg_class, pmtamsg_properties[i].name, pmtamsg_properties[i].len, property, ZEND_ACC_PRIVATE, pmtamsg_properties[i].comment, pmtamsg_properties[i].comment_len TSRMLS_CC);
-	}
+	pmtamsg_object_handlers = *zend_get_std_object_handlers();
+	pmtamsg_object_handlers.clone_obj            = NULL;
+	pmtamsg_object_handlers.read_property        = pmtamsg_read_property;
+	pmtamsg_object_handlers.has_property         = pmtamsg_has_property;
+	pmtamsg_object_handlers.write_property       = pmtamsg_write_property;
+	pmtamsg_object_handlers.get_property_ptr_ptr = NULL;
 
 	zend_declare_class_constant_long(pmta_msg_class, PHPPMTA_SL("RETURN_HEADERS"),  PmtaMsgRETURN_HEADERS TSRMLS_CC);
 	zend_declare_class_constant_long(pmta_msg_class, PHPPMTA_SL("RETURN_FULL"),     PmtaMsgRETURN_FULL TSRMLS_CC);

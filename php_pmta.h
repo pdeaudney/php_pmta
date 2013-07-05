@@ -27,7 +27,7 @@
  * @headerfile php_pmta.h
  * @brief Extension version
  */
-#define PHP_PMTA_EXTVER  "0.3"
+#define PHP_PMTA_EXTVER  "0.4"
 
 #ifdef HAVE_CONFIG_H
 #	include "config.h"
@@ -80,11 +80,9 @@
 #if PHP_VERSION_ID > 50399
 #	define ZLK_DC , const struct _zend_literal* key
 #	define ZLK_CC , key
-#	define ZLK_NULL , NULL
 #else
 #	define ZLK_DC
 #	define ZLK_CC
-#	define ZLK_NULL
 #endif
 
 #define ISSTR(pzv, str) ((Z_STRLEN_P(pzv) == strlen(str)) && !strcmp(Z_STRVAL_P(pzv), str))
@@ -99,20 +97,12 @@ struct props {
 	int comment_len;  /**< PHPDoc comment length */
 };
 
-PHPPMTA_VISIBILITY_HIDDEN extern int le_pmta_message;    /**< PMTA Message (PmtaMsg) resource ID */
-
 PHPPMTA_VISIBILITY_HIDDEN extern zend_class_entry* pmta_conn_class;             /**< PmtaConnection class */
 PHPPMTA_VISIBILITY_HIDDEN extern zend_class_entry* pmta_error_connection_class; /**< PmtaErrorCoonection class */
 PHPPMTA_VISIBILITY_HIDDEN extern zend_class_entry* pmta_error_recipient_class;  /**< PmtaErrorMessage class */
 PHPPMTA_VISIBILITY_HIDDEN extern zend_class_entry* pmta_error_message_class;    /**< PmtaErrorMessage class */
 PHPPMTA_VISIBILITY_HIDDEN extern zend_class_entry* pmta_rcpt_class;             /**< PmtaRecipient class */
 PHPPMTA_VISIBILITY_HIDDEN extern zend_class_entry* pmta_msg_class;              /**< PmtaMessage class */
-
-/**
- * @headerfile php_pmta.h
- * @brief PMTA Message (PmtaMsg) resource name
- */
-#define PMTA_MESSAGE_RES_NAME    "PMTA Message"
 
 /**
  * @headerfile php_pmta.h
