@@ -545,7 +545,6 @@ static PHP_METHOD(PmtaMessage, __set)
 static PHP_METHOD(PmtaMessage, beginPart)
 {
 	struct pmtamsg_object* obj;
-	PmtaMsg msg = getMessage(getThis() TSRMLS_CC);
 	long int part;
 	BOOL res;
 
