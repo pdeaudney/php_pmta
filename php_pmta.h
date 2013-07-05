@@ -36,6 +36,7 @@
 #include <main/php.h>
 #include <main/php_ini.h>
 #include <Zend/zend_exceptions.h>
+#include <Zend/zend_interfaces.h>
 
 /**
  * @headerfile php_pmta.h

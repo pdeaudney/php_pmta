@@ -310,25 +310,22 @@ static void pmtaconn_dtor(void* v TSRMLS_DC)
 	efree(obj);
 }
 
-static zend_object_value pmtaconn_ctor_ex(struct pmtaconn_object** pobj, zend_class_entry* ce TSRMLS_DC)
+static zend_object_value pmtaconn_ctor(zend_class_entry* ce TSRMLS_DC)
 {
 	struct pmtaconn_object* obj = ecalloc(1, sizeof(struct pmtaconn_object));
 	zend_object_value retval;
 
 	zend_object_std_init(&(obj->obj), ce TSRMLS_CC);
-	retval.handle   = zend_objects_store_put(obj, NULL, pmtaconn_dtor, NULL TSRMLS_CC);
+	retval.handle = zend_objects_store_put(
+		obj,
+		(zend_objects_store_dtor_t)zend_objects_destroy_object,
+		pmtaconn_dtor,
+		NULL TSRMLS_CC
+	);
+
 	retval.handlers = &pmtaconn_object_handlers;
 
-	if (pobj) {
-		*pobj = obj;
-	}
-
 	return retval;
-}
-
-static zend_object_value pmtaconn_ctor(zend_class_entry* ce TSRMLS_DC)
-{
-	return pmtaconn_ctor_ex(NULL, ce TSRMLS_CC);
 }
 
 /**
@@ -508,6 +505,10 @@ static PHP_METHOD(PmtaConnection, submitMessage)
  */
 static PHP_METHOD(PmtaConnection, getLastError)
 {
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_NULL();
+	}
+
 	if (return_value_used) {
 		struct pmtaconn_object* obj = fetchPmtaConnObject(getThis() TSRMLS_CC);
 		throw_pmta_error(pmta_error_connection_class, PmtaConnGetLastErrorType(obj->conn), PmtaConnGetLastError(obj->conn), &return_value TSRMLS_CC);
@@ -556,6 +557,8 @@ void pmtaconn_register_class(TSRMLS_D)
 	pmta_conn_class = zend_register_internal_class(&e TSRMLS_CC);
 
 	pmta_conn_class->create_object = pmtaconn_ctor;
+	pmta_conn_class->serialize     = zend_class_serialize_deny;
+	pmta_conn_class->unserialize   = zend_class_unserialize_deny;
 
 	pmtaconn_object_handlers = *zend_get_std_object_handlers();
 	pmtaconn_object_handlers.clone_obj            = NULL;
