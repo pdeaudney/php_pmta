@@ -256,10 +256,10 @@ static zend_object_value pmtaconn_ctor(zend_class_entry* ce TSRMLS_DC)
 static PHP_METHOD(PmtaConnection, __construct)
 {
 	char* server     = NULL;
-	int server_len   = 0;
+	int server_len;
 	long int port    = 0;
 	char* username   = NULL;
-	int username_len = 0;
+	int username_len;
 	char* password   = NULL;
 	int password_len;
 	BOOL result;
@@ -395,10 +395,7 @@ static PHP_METHOD(PmtaConnection, submitMessage)
 	}
 
 	obj = fetchPmtaConnObject(getThis() TSRMLS_CC);
-
 	msg = getMessage(message TSRMLS_CC);
-	ZEND_VERIFY_RESOURCE(msg);
-
 	res = PmtaConnSubmit(obj->conn, msg);
 	if (TRUE == res) {
 		RETURN_TRUE;
