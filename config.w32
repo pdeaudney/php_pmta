@@ -2,7 +2,7 @@ ARG_WITH("pmta", "PMTA Submission API", "yes");
 
 if (PHP_PMTA != "no") {
 	if (CHECK_LIB("pmta.lib", "pmta", PHP_PMTA + "\\api\\lib") && CHECK_HEADER_ADD_INCLUDE("PmtaApi.h", "CFLAGS", PHP_PMTA + "\\api\\include")) {
-		EXTENSION("pmta", "extension.c pmta_common.c pmta_error.c pmta_connection.c pmta_recipient.c pmta_message.c");
+		EXTENSION("pmta", "extension.c pmta_error.c pmta_connection.c pmta_recipient.c pmta_message.c");
 	}
 	else {
 		WARNING("PMTA support cannot be enabled, PMTA is missing");

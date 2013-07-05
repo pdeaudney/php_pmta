@@ -23,6 +23,6 @@ if test "$PHP_PMTA" != "no"; then
 	)
 
 	PHP_SUBST(PMTA_SHARED_LIBADD)
-	PHP_NEW_EXTENSION(pmta, [extension.c pmta_common.c pmta_error.c pmta_connection.c pmta_recipient.c pmta_message.c], $ext_shared)
+	PHP_NEW_EXTENSION(pmta, [extension.c pmta_error.c pmta_connection.c pmta_recipient.c pmta_message.c], $ext_shared)
 	PHP_ADD_MAKEFILE_FRAGMENT
 fi
