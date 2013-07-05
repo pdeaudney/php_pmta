@@ -5,7 +5,7 @@
  * @brief @c PmtaRecipient class implementation
  * @details
 <PRE>
-final class PmtaRecipient
+class PmtaRecipient
 {
 	const NOTIFY_NEVER   = PmtaRcptNOTIFY_NEVER;
 	const NOTIFY_SUCCESS = PmtaRcptNOTIFY_SUCCESS;
@@ -187,21 +187,21 @@ static zval* pmtarcpt_read_property(zval* object, zval* member, int type ZLK_DC 
 
 static int pmtarcpt_has_property_internal(struct pmtarcpt_object* obj, zval* member, int has_set_exists TSRMLS_DC)
 {
-	int retval;
+	int retval = 1;
 
 	if (ISSTR(member, "address")) {
-		if (1 == has_set_exists) { /* set */
-			retval = (obj->address != NULL && obj->address[0]);
+		if (1 == has_set_exists) {
+			retval = (obj->address && obj->address[0]);
 		}
 	}
 	else if (ISSTR(member, "notify")) {
-		if (1 == has_set_exists) { /* set */
+		if (1 == has_set_exists) {
 			retval = (obj->notify != 0);
 		}
 	}
 	else if (ISSTR(member, "variables")) {
-		if (1 == has_set_exists) { /* set */
-			retval = (obj->vars != NULL && zend_hash_num_elements(Z_ARRVAL_P(obj->vars)));
+		if (1 == has_set_exists) {
+			retval = (obj->vars && zend_hash_num_elements(Z_ARRVAL_P(obj->vars)));
 		}
 	}
 	else {

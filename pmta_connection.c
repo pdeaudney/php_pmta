@@ -152,25 +152,25 @@ static zval* pmtaconn_read_property(zval* object, zval* member, int type ZLK_DC 
 
 static int pmtaconn_has_property_internal(struct pmtaconn_object* obj, zval* member, int has_set_exists TSRMLS_DC)
 {
-	int retval;
+	int retval = 1;
 
 	if (ISSTR(member, "server")) {
-		if (1 == has_set_exists) { /* set */
-			retval = (obj->server != NULL && obj->server[0]);
+		if (1 == has_set_exists) {
+			retval = (obj->server && obj->server[0]);
 		}
 	}
 	else if (ISSTR(member, "username")) {
-		if (1 == has_set_exists) { /* set */
-			retval = (obj->username != NULL && obj->username[0]);
+		if (1 == has_set_exists) {
+			retval = (obj->username && obj->username[0]);
 		}
 	}
 	else if (ISSTR(member, "password")) {
-		if (1 == has_set_exists) { /* set */
-			retval = (obj->password != NULL && obj->password[0]);
+		if (1 == has_set_exists) {
+			retval = (obj->password && obj->password[0]);
 		}
 	}
 	else if (ISSTR(member, "port")) {
-		if (1 == has_set_exists) { /* set */
+		if (1 == has_set_exists) {
 			retval = (obj->port > 0);
 		}
 	}
