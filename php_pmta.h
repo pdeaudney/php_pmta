@@ -100,7 +100,6 @@ struct props {
 };
 
 PHPPMTA_VISIBILITY_HIDDEN extern int le_pmta_message;    /**< PMTA Message (PmtaMsg) resource ID */
-PHPPMTA_VISIBILITY_HIDDEN extern int le_pmta_recipient;  /**< PMTA Recipient (PmtaRcpt) resource ID */
 
 PHPPMTA_VISIBILITY_HIDDEN extern zend_class_entry* pmta_conn_class;             /**< PmtaConnection class */
 PHPPMTA_VISIBILITY_HIDDEN extern zend_class_entry* pmta_error_connection_class; /**< PmtaErrorCoonection class */
@@ -111,21 +110,9 @@ PHPPMTA_VISIBILITY_HIDDEN extern zend_class_entry* pmta_msg_class;              
 
 /**
  * @headerfile php_pmta.h
- * @brief PMTA Connection (PmtaConn) resource name
- */
-#define PMTA_CONNECTION_RES_NAME "PMTA Connection"
-
-/**
- * @headerfile php_pmta.h
  * @brief PMTA Message (PmtaMsg) resource name
  */
 #define PMTA_MESSAGE_RES_NAME    "PMTA Message"
-
-/**
- * @headerfile php_pmta.h
- * @brief PMTA Recipient (PmtaRcpt) resource name
- */
-#define PMTA_RECIPIENT_RES_NAME  "PMTA Recipient"
 
 /**
  * @headerfile php_pmta.h

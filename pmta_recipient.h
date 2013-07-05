@@ -58,13 +58,6 @@ PHPPMTA_VISIBILITY_HIDDEN extern PmtaRcpt getRecipient(zval* object TSRMLS_DC);
 PHPPMTA_VISIBILITY_HIDDEN extern void lock_recipient(zval* object TSRMLS_DC);
 
 /**
- * @brief PMTA Recipient (PmtaRcpt) resource destructor
- * @param res Resource
- * @param tsrm_ls Internally used by Zend
- */
-PHPPMTA_VISIBILITY_HIDDEN extern void pmta_recipient_dtor(zend_rsrc_list_entry* res TSRMLS_DC);
-
-/**
  * @brief Registers PmtaRecipient class
  * @param tsrm_ls Internally used by Zend
  */
