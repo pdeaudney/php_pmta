@@ -211,6 +211,41 @@ static int pmtaconn_has_property(zval* object, zval* member, int has_set_exists 
 	return retval;
 }
 
+static HashTable* pmtaconn_get_properties(zval* object TSRMLS_DC)
+{
+	struct pmtaconn_object* obj = fetchPmtaConnObject(object TSRMLS_CC);
+	HashTable* props            = zend_std_get_properties(object TSRMLS_CC);
+	zval* zv;
+
+	if (!obj->conn || GC_G(gc_active)) {
+		return props;
+	}
+
+	if (obj->server) {
+		MAKE_STD_ZVAL(zv);
+		ZVAL_STRING(zv, obj->server, 1);
+		zend_hash_update(props, "server", sizeof("server"), &zv, sizeof(zval*), NULL);
+	}
+
+	if (obj->username) {
+		MAKE_STD_ZVAL(zv);
+		ZVAL_STRING(zv, obj->username, 1);
+		zend_hash_update(props, "username", sizeof("username"), &zv, sizeof(zval*), NULL);
+	}
+
+	if (obj->password) {
+		MAKE_STD_ZVAL(zv);
+		ZVAL_STRING(zv, obj->password, 1);
+		zend_hash_update(props, "password", sizeof("password"), &zv, sizeof(zval*), NULL);
+	}
+
+	MAKE_STD_ZVAL(zv);
+	ZVAL_LONG(zv, obj->port);
+	zend_hash_update(props, "port", sizeof("port"), &zv, sizeof(zval*), NULL);
+
+	return props;
+}
+
 static void pmtaconn_dtor(void* v TSRMLS_DC)
 {
 	struct pmtaconn_object* obj = v;
@@ -482,6 +517,7 @@ void pmtaconn_register_class(TSRMLS_D)
 	pmtaconn_object_handlers.read_property        = pmtaconn_read_property;
 	pmtaconn_object_handlers.has_property         = pmtaconn_has_property;
 	pmtaconn_object_handlers.get_property_ptr_ptr = NULL;
+	pmtaconn_object_handlers.get_properties       = pmtaconn_get_properties;
 
 	zend_declare_class_constant_stringl(pmta_conn_class, PHPPMTA_SL("LOCAL_SERVER"), PHPPMTA_SL("127.0.0.1") TSRMLS_CC);
 	zend_declare_class_constant_long(pmta_conn_class, PHPPMTA_SL("DEFAULT_PORT"), 25 TSRMLS_CC);

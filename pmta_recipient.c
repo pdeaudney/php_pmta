@@ -299,6 +299,32 @@ static void pmtarcpt_write_property(zval* object, zval* member, zval* value ZLK_
 	}
 }
 
+static HashTable* pmtarcpt_get_properties(zval* object TSRMLS_DC)
+{
+	struct pmtarcpt_object* obj = fetchPmtaRcptObject(object TSRMLS_CC);
+	HashTable* props            = zend_std_get_properties(object TSRMLS_CC);
+	zval* zv;
+
+	if (GC_G(gc_active)) {
+		return props;
+	}
+
+	if (obj->address) {
+		MAKE_STD_ZVAL(zv);
+		ZVAL_STRING(zv, obj->address, 1);
+		zend_hash_update(props, "address", sizeof("address"), &zv, sizeof(zval*), NULL);
+	}
+
+	MAKE_STD_ZVAL(zv);
+	ZVAL_LONG(zv, obj->notify);
+	zend_hash_update(props, "notify", sizeof("notify"), &zv, sizeof(zval*), NULL);
+
+	Z_ADDREF_P(obj->vars);
+	zend_hash_update(props, "variables", sizeof("variables"), &obj->vars, sizeof(zval*), NULL);
+
+	return props;
+}
+
 static void pmtarcpt_dtor(void* v TSRMLS_DC)
 {
 	struct pmtarcpt_object* obj = v;
@@ -490,6 +516,7 @@ void pmtarcpt_register_class(TSRMLS_D)
 	pmtarcpt_object_handlers.has_property         = pmtarcpt_has_property;
 	pmtarcpt_object_handlers.write_property       = pmtarcpt_write_property;
 	pmtarcpt_object_handlers.get_property_ptr_ptr = NULL;
+	pmtarcpt_object_handlers.get_properties       = pmtarcpt_get_properties;
 
 	zend_declare_class_constant_long(pmta_rcpt_class, PHPPMTA_SL("NOTIFY_NEVER"),   PmtaRcptNOTIFY_NEVER   TSRMLS_CC);
 	zend_declare_class_constant_long(pmta_rcpt_class, PHPPMTA_SL("NOTIFY_SUCCESS"), PmtaRcptNOTIFY_SUCCESS TSRMLS_CC);
