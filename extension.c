@@ -13,13 +13,6 @@
 #include "pmta_message.h"
 #include "pmta_recipient.h"
 
-#if !defined(ZEND_ENGINE_2) && !defined(OnUpdateLong)
-	/**
-	 * @note Zend Engine 1 had OnUpdateInt instead of OnUpdateLong
-	 */
-#	define OnUpdateLong OnUpdateInt
-#endif
-
 ZEND_DECLARE_MODULE_GLOBALS(pmta);
 
 /**
@@ -52,21 +45,12 @@ zend_class_entry* pmta_conn_class;
 zend_class_entry* pmta_rcpt_class;
 zend_class_entry* pmta_msg_class;
 
-#ifndef PHP_GINIT
-/**
- * @brief Globals constructor
- * @param pmta_globals Pointer to the PMTA globals
- * @param tsrm_ls
- */
-static void pmta_globals_ctor(zend_pmta_globals* pmta_globals TSRMLS_DC)
-#else
 /**
  * @brief Globals constructor
  * @param pmta_globals Pointer to the PMTA globals
  * @param tsrm_ls
  */
 static PHP_GINIT_FUNCTION(pmta)
-#endif
 {
 	pmta_globals->use_exceptions = 0;
 	pmta_globals->server         = NULL;
@@ -85,14 +69,6 @@ static PHP_GINIT_FUNCTION(pmta)
  */
 static PHP_MINIT_FUNCTION(pmta)
 {
-#ifndef PHP_GINIT
-#ifdef ZTS
-	ts_allocate_id(&pmta_globals_id, sizeof(zend_pmta_globals), (ts_allocate_ctor)pmta_globals_ctor, NULL);
-#else
-	pmta_globals_ctor(&pmta_globals TSRMLS_CC);
-#endif /* ZTS */
-#endif /* PHP_GINIT */
-
 	REGISTER_INI_ENTRIES();
 
 	pmtaconn_register_class(TSRMLS_C);
@@ -138,20 +114,16 @@ static
 const
 #endif
 zend_module_dep pmta_deps[] = {
-#if defined(HAVE_SPL) && ((PHP_MAJOR_VERSION > 5) || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 1))
+#if defined(HAVE_SPL)
 	ZEND_MOD_REQUIRED("spl")
 #endif
 	{ NULL, NULL, NULL, 0 }
 };
 
 zend_module_entry pmta_module_entry = {
-#if ZEND_MODULE_API_NO >= 20050922
 	STANDARD_MODULE_HEADER_EX,
 	ini_entries,
 	pmta_deps,
-#elif ZEND_MODULE_API_NO >= 20010901
-	STANDARD_MODULE_HEADER,
-#endif
 	PHP_PMTA_EXTNAME,
 	NULL,
 	PHP_MINIT(pmta),
@@ -159,16 +131,10 @@ zend_module_entry pmta_module_entry = {
 	NULL,
 	NULL,
 	PHP_MINFO(pmta),
-#if ZEND_MODULE_API_NO > 20010901
 	PHP_PMTA_EXTVER,
-#endif
-#if ZEND_MODULE_API_NO > 20050922
 	PHP_MODULE_GLOBALS(pmta),
-#	ifdef PHP_GINIT
 	PHP_GINIT(pmta),
 	NULL,
-#	endif
-#endif
 	NULL,
 	STANDARD_MODULE_PROPERTIES_EX
 };
