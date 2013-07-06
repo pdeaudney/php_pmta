@@ -125,14 +125,6 @@ extern zend_module_entry pmta_module_entry;
 
 /**
  * @headerfile php_pmta.h
- * @def PHPPMTA_NELEMS
- * @brief Number of elements in the array
- * @warning @c x can be evaluated several times
- */
-#define PHPPMTA_NELEMS(x) (sizeof(x)/sizeof(x[0]))
-
-/**
- * @headerfile php_pmta.h
  * @def PHPPMTA_SL
  * @warning @c x can be evaluated several times
  * @warning @c x is supposed to be a zero-terminated string
