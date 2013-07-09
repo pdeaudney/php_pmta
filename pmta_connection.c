@@ -519,6 +519,6 @@ void pmtaconn_register_class(TSRMLS_D)
 	pmtaconn_object_handlers.get_property_ptr_ptr = NULL;
 	pmtaconn_object_handlers.get_properties       = pmtaconn_get_properties;
 
-	zend_declare_class_constant_stringl(pmta_conn_class, PHPPMTA_SL("LOCAL_SERVER"), PHPPMTA_SL("127.0.0.1") TSRMLS_CC);
-	zend_declare_class_constant_long(pmta_conn_class, PHPPMTA_SL("DEFAULT_PORT"), 25 TSRMLS_CC);
+	zend_declare_class_constant_stringl(pmta_conn_class, ZEND_STRL("LOCAL_SERVER"), ZEND_STRL("127.0.0.1") TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_conn_class, ZEND_STRL("DEFAULT_PORT"), 25 TSRMLS_CC);
 }

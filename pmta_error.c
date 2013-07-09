@@ -55,11 +55,11 @@ void throw_pmta_error(zend_class_entry* error_class, int code, const char* messa
 	object_init_ex(exception, error_class);
 
 #if ZEND_MODULE_API_NO > 20060613
-	zend_update_property_string(error_class, exception, PHPPMTA_SL("message"), message TSRMLS_CC);
+	zend_update_property_string(error_class, exception, ZEND_STRL("message"), message TSRMLS_CC);
 #else
-	zend_update_property_string(error_class, exception, PHPPMTA_SL("message"), (char*)message TSRMLS_CC);
+	zend_update_property_string(error_class, exception, ZEND_STRL("message"), (char*)message TSRMLS_CC);
 #endif
-	zend_update_property_long(error_class, exception, PHPPMTA_SL("code"), code TSRMLS_CC);
+	zend_update_property_long(error_class, exception, ZEND_STRL("code"), code TSRMLS_CC);
 
 	if (!result) {
 		zend_throw_exception_object(exception TSRMLS_CC);
@@ -92,24 +92,24 @@ void pmtaerror_register_class(TSRMLS_D)
 	pmta_error_class = zend_register_internal_class_ex(&e, zend_exception_get_default(TSRMLS_C), NULL TSRMLS_CC);
 #endif
 
-	zend_declare_class_constant_long(pmta_error_class, PHPPMTA_SL("OUT_OF_MEMORY"),    PmtaApiERROR_OutOfMemory     TSRMLS_CC);
-	zend_declare_class_constant_long(pmta_error_class, PHPPMTA_SL("ILLEGAL_STATE"),    PmtaApiERROR_IllegalState    TSRMLS_CC);
-	zend_declare_class_constant_long(pmta_error_class, PHPPMTA_SL("ILLEGAL_ARGUMENT"), PmtaApiERROR_IllegalArgument TSRMLS_CC);
-	zend_declare_class_constant_long(pmta_error_class, PHPPMTA_SL("SECURITY"),         PmtaApiERROR_Security        TSRMLS_CC);
-	zend_declare_class_constant_long(pmta_error_class, PHPPMTA_SL("IO"),               PmtaApiERROR_IO              TSRMLS_CC);
-	zend_declare_class_constant_long(pmta_error_class, PHPPMTA_SL("SERVICE"),          PmtaApiERROR_Service         TSRMLS_CC);
-	zend_declare_class_constant_long(pmta_error_class, PHPPMTA_SL("EMAIL_ADDRESS"),    PmtaApiERROR_EmailAddress    TSRMLS_CC);
-	zend_declare_class_constant_long(pmta_error_class, PHPPMTA_SL("PHP_API"),          PmtaApiERROR_PHP_API         TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_error_class, ZEND_STRL("OUT_OF_MEMORY"),    PmtaApiERROR_OutOfMemory     TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_error_class, ZEND_STRL("ILLEGAL_STATE"),    PmtaApiERROR_IllegalState    TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_error_class, ZEND_STRL("ILLEGAL_ARGUMENT"), PmtaApiERROR_IllegalArgument TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_error_class, ZEND_STRL("SECURITY"),         PmtaApiERROR_Security        TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_error_class, ZEND_STRL("IO"),               PmtaApiERROR_IO              TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_error_class, ZEND_STRL("SERVICE"),          PmtaApiERROR_Service         TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_error_class, ZEND_STRL("EMAIL_ADDRESS"),    PmtaApiERROR_EmailAddress    TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_error_class, ZEND_STRL("PHP_API"),          PmtaApiERROR_PHP_API         TSRMLS_CC);
 
 	INIT_CLASS_ENTRY(e, "PmtaErrorConnection", pmta_error_class_methods);
-	pmta_error_connection_class                  = zend_register_internal_class_ex(&e, pmta_error_class, NULL TSRMLS_CC);
-	pmta_error_connection_class->ce_flags       |= ZEND_ACC_FINAL_CLASS;
+	pmta_error_connection_class            = zend_register_internal_class_ex(&e, pmta_error_class, NULL TSRMLS_CC);
+	pmta_error_connection_class->ce_flags |= ZEND_ACC_FINAL_CLASS;
 
 	INIT_CLASS_ENTRY(e, "PmtaErrorRecipient", pmta_error_class_methods);
-	pmta_error_recipient_class                  = zend_register_internal_class_ex(&e, pmta_error_class, NULL TSRMLS_CC);
-	pmta_error_recipient_class->ce_flags       |= ZEND_ACC_FINAL_CLASS;
+	pmta_error_recipient_class             = zend_register_internal_class_ex(&e, pmta_error_class, NULL TSRMLS_CC);
+	pmta_error_recipient_class->ce_flags  |= ZEND_ACC_FINAL_CLASS;
 
 	INIT_CLASS_ENTRY(e, "PmtaErrorMessage", pmta_error_class_methods);
-	pmta_error_message_class                  = zend_register_internal_class_ex(&e, pmta_error_class, NULL TSRMLS_CC);
-	pmta_error_message_class->ce_flags       |= ZEND_ACC_FINAL_CLASS;
+	pmta_error_message_class               = zend_register_internal_class_ex(&e, pmta_error_class, NULL TSRMLS_CC);
+	pmta_error_message_class->ce_flags    |= ZEND_ACC_FINAL_CLASS;
 }

@@ -101,7 +101,7 @@ struct pmtarcpt_object {
 	zend_object obj;
 	PmtaRcpt rcpt;
 	char* address;
-	zval* vars;
+	HashTable* vars;
 	int notify;
 };
 
@@ -145,7 +145,9 @@ static zval* pmtarcpt_read_property_internal(struct pmtarcpt_object* obj, zval* 
 		ZVAL_LONG(ret, obj->notify);
 	}
 	else if (ISSTR(member, "variables")) {
-		MAKE_COPY_ZVAL(&obj->vars, ret);
+		zval* tmp;
+		array_init_size(ret, zend_hash_num_elements(obj->vars));
+		zend_hash_copy(Z_ARRVAL_P(ret), obj->vars, (copy_ctor_func_t)zval_add_ref, (void*)&tmp, sizeof(zval*));
 	}
 	else {
 		if (type != BP_VAR_IS) {
@@ -201,7 +203,7 @@ static int pmtarcpt_has_property_internal(struct pmtarcpt_object* obj, zval* mem
 	}
 	else if (ISSTR(member, "variables")) {
 		if (1 == has_set_exists) {
-			retval = (obj->vars && zend_hash_num_elements(Z_ARRVAL_P(obj->vars)));
+			retval = (obj->vars && zend_hash_num_elements(obj->vars));
 		}
 	}
 	else {
@@ -304,23 +306,26 @@ static HashTable* pmtarcpt_get_properties(zval* object TSRMLS_DC)
 	struct pmtarcpt_object* obj = fetchPmtaRcptObject(object TSRMLS_CC);
 	HashTable* props            = zend_std_get_properties(object TSRMLS_CC);
 	zval* zv;
+	zval* tmp;
 
 	if (GC_G(gc_active)) {
 		return props;
 	}
 
 	if (obj->address) {
-		MAKE_STD_ZVAL(zv);
+		ALLOC_ZVAL(zv);
 		ZVAL_STRING(zv, obj->address, 1);
 		zend_hash_update(props, "address", sizeof("address"), &zv, sizeof(zval*), NULL);
 	}
 
-	MAKE_STD_ZVAL(zv);
+	ALLOC_ZVAL(zv);
 	ZVAL_LONG(zv, obj->notify);
 	zend_hash_update(props, "notify", sizeof("notify"), &zv, sizeof(zval*), NULL);
 
-	Z_ADDREF_P(obj->vars);
-	zend_hash_update(props, "variables", sizeof("variables"), &obj->vars, sizeof(zval*), NULL);
+	ALLOC_ZVAL(zv);
+	array_init_size(zv, zend_hash_num_elements(obj->vars));
+	zend_hash_copy(Z_ARRVAL_P(zv), obj->vars, (copy_ctor_func_t)zval_add_ref, (void*)&tmp, sizeof(zval*));
+	zend_hash_update(props, "variables", sizeof("variables"), (void*)&zv, sizeof(zval*), NULL);
 
 	return props;
 }
@@ -330,7 +335,7 @@ static void pmtarcpt_dtor(void* v TSRMLS_DC)
 	struct pmtarcpt_object* obj = v;
 
 	if (obj->address)  { efree(obj->address);       }
-	if (obj->vars)     { zval_ptr_dtor(&obj->vars); }
+	if (obj->vars)     { FREE_HASHTABLE(obj->vars); }
 	if (obj->rcpt)     { PmtaRcptFree(obj->rcpt);   }
 
 	zend_object_std_dtor(&(obj->obj) TSRMLS_CC);
@@ -382,8 +387,8 @@ static PHP_METHOD(PmtaRecipient, __construct)
 	obj->address = estrndup(address, address_len);
 	obj->notify  = PmtaRcptNOTIFY_NEVER;
 
-	MAKE_STD_ZVAL(obj->vars);
-	array_init(obj->vars);
+	ALLOC_HASHTABLE(obj->vars);
+	zend_hash_init(obj->vars, 8, NULL, ZVAL_PTR_DTOR, 0);
 }
 
 static PHP_METHOD(PmtaRecipient, __get)
@@ -446,7 +451,10 @@ static PHP_METHOD(PmtaRecipient, defineVariable)
 
 	res = PmtaRcptDefineVariable(obj->rcpt, name, value);
 	if (TRUE == res) {
-		add_assoc_string(obj->vars, name, value, 1);
+		zval* tmp;
+		ALLOC_ZVAL(tmp);
+		ZVAL_STRINGL(tmp, value, value_len, 1);
+		zend_symtable_update(obj->vars, name, name_len + 1, (void*)tmp, sizeof(zval*), NULL);
 		RETURN_TRUE;
 	}
 
@@ -500,7 +508,6 @@ zend_function_entry pmta_rcpt_class_methods[] = {
 void pmtarcpt_register_class(TSRMLS_D)
 {
 	zend_class_entry e;
-	size_t i;
 
 	INIT_CLASS_ENTRY(e, "PmtaRecipient", pmta_rcpt_class_methods);
 
@@ -518,9 +525,9 @@ void pmtarcpt_register_class(TSRMLS_D)
 	pmtarcpt_object_handlers.get_property_ptr_ptr = NULL;
 	pmtarcpt_object_handlers.get_properties       = pmtarcpt_get_properties;
 
-	zend_declare_class_constant_long(pmta_rcpt_class, PHPPMTA_SL("NOTIFY_NEVER"),   PmtaRcptNOTIFY_NEVER   TSRMLS_CC);
-	zend_declare_class_constant_long(pmta_rcpt_class, PHPPMTA_SL("NOTIFY_SUCCESS"), PmtaRcptNOTIFY_SUCCESS TSRMLS_CC);
-	zend_declare_class_constant_long(pmta_rcpt_class, PHPPMTA_SL("NOTIFY_FAILURE"), PmtaRcptNOTIFY_FAILURE TSRMLS_CC);
-	zend_declare_class_constant_long(pmta_rcpt_class, PHPPMTA_SL("NOTIFY_DELAY"),   PmtaRcptNOTIFY_DELAY   TSRMLS_CC);
-	zend_declare_class_constant_long(pmta_rcpt_class, PHPPMTA_SL("NOTIFY_ALWAYS"),  PmtaRcptNOTIFY_SUCCESS | PmtaRcptNOTIFY_FAILURE | PmtaRcptNOTIFY_DELAY TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_rcpt_class, ZEND_STRL("NOTIFY_NEVER"),   PmtaRcptNOTIFY_NEVER   TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_rcpt_class, ZEND_STRL("NOTIFY_SUCCESS"), PmtaRcptNOTIFY_SUCCESS TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_rcpt_class, ZEND_STRL("NOTIFY_FAILURE"), PmtaRcptNOTIFY_FAILURE TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_rcpt_class, ZEND_STRL("NOTIFY_DELAY"),   PmtaRcptNOTIFY_DELAY   TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_rcpt_class, ZEND_STRL("NOTIFY_ALWAYS"),  PmtaRcptNOTIFY_SUCCESS | PmtaRcptNOTIFY_FAILURE | PmtaRcptNOTIFY_DELAY TSRMLS_CC);
 }

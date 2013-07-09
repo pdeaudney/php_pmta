@@ -35,6 +35,7 @@
 
 #include <main/php.h>
 #include <main/php_ini.h>
+#include <Zend/zend.h>
 #include <Zend/zend_exceptions.h>
 #include <Zend/zend_interfaces.h>
 
@@ -122,15 +123,6 @@ extern zend_module_entry pmta_module_entry;
  * @def phpext_pmta_ptr
  */
 #define phpext_pmta_ptr &pmta_module_entry
-
-/**
- * @headerfile php_pmta.h
- * @def PHPPMTA_SL
- * @warning @c x can be evaluated several times
- * @warning @c x is supposed to be a zero-terminated string
- * @brief @c x and its size minus one byte
- */
-#define PHPPMTA_SL(x) x, sizeof(x)-1
 
 /**
  * @brief This structure declares module global variables

@@ -143,7 +143,7 @@ struct pmtamsg_object {
 	char* envid;
 	char* vmta;
 	char* jobid;
-	zval* recipients;
+	HashTable* recipients;
 	int rettype;
 	int encoding;
 	int verp;
@@ -186,7 +186,9 @@ static zval* pmtamsg_read_property_internal(struct pmtamsg_object* obj, zval* me
 		ZVAL_LONG(ret, obj->verp);
 	}
 	else if (ISSTR(member, "recipients")) {
-		MAKE_COPY_ZVAL(&obj->recipients, ret);
+		zval* tmp;
+		array_init_size(ret, zend_hash_num_elements(obj->recipients));
+		zend_hash_copy(Z_ARRVAL_P(ret), obj->recipients, (copy_ctor_func_t)zval_add_ref, (void*)&tmp, sizeof(zval*));
 	}
 	else {
 		if (type != BP_VAR_IS) {
@@ -267,7 +269,7 @@ static int pmtamsg_has_property_internal(struct pmtamsg_object* obj, zval* membe
 	}
 	else if (ISSTR(member, "recipients")) {
 		if (1 == has_set_exists) {
-			retval = (obj->recipients && zend_hash_num_elements(Z_ARRVAL_P(obj->recipients)));
+			retval = (obj->recipients && zend_hash_num_elements(obj->recipients));
 		}
 	}
 	else {
@@ -405,49 +407,52 @@ static HashTable* pmtamsg_get_properties(zval* object TSRMLS_DC)
 	struct pmtamsg_object* obj = fetchPmtaMsgObject(object TSRMLS_CC);
 	HashTable* props           = zend_std_get_properties(object TSRMLS_CC);
 	zval* zv;
+	zval* tmp;
 
 	if (!obj->msg || GC_G(gc_active)) {
 		return props;
 	}
 
 	if (obj->originator) {
-		MAKE_STD_ZVAL(zv);
+		ALLOC_ZVAL(zv);
 		ZVAL_STRING(zv, obj->originator, 1);
 		zend_hash_update(props, "originator", sizeof("originator"), &zv, sizeof(zval*), NULL);
 	}
 
 	if (obj->envid) {
-		MAKE_STD_ZVAL(zv);
+		ALLOC_ZVAL(zv);
 		ZVAL_STRING(zv, obj->envid, 1);
 		zend_hash_update(props, "envelope_id", sizeof("envelope_id"), &zv, sizeof(zval*), NULL);
 	}
 
 	if (obj->vmta) {
-		MAKE_STD_ZVAL(zv);
+		ALLOC_ZVAL(zv);
 		ZVAL_STRING(zv, obj->vmta, 1);
 		zend_hash_update(props, "vmta", sizeof("vmta"), &zv, sizeof(zval*), NULL);
 	}
 
 	if (obj->jobid) {
-		MAKE_STD_ZVAL(zv);
+		ALLOC_ZVAL(zv);
 		ZVAL_STRING(zv, obj->jobid, 1);
 		zend_hash_update(props, "jobid", sizeof("jobid"), &zv, sizeof(zval*), NULL);
 	}
 
-	MAKE_STD_ZVAL(zv);
+	ALLOC_ZVAL(zv);
 	ZVAL_LONG(zv, obj->rettype);
 	zend_hash_update(props, "return_type", sizeof("return_type"), &zv, sizeof(zval*), NULL);
 
-	MAKE_STD_ZVAL(zv);
+	ALLOC_ZVAL(zv);
 	ZVAL_LONG(zv, obj->encoding);
 	zend_hash_update(props, "encoding", sizeof("encoding"), &zv, sizeof(zval*), NULL);
 
-	MAKE_STD_ZVAL(zv);
+	ALLOC_ZVAL(zv);
 	ZVAL_LONG(zv, obj->verp);
 	zend_hash_update(props, "verp", sizeof("verp"), &zv, sizeof(zval*), NULL);
 
-	Z_ADDREF_P(obj->recipients);
-	zend_hash_update(props, "recipients", sizeof("recipients"), &obj->recipients, sizeof(zval*), NULL);
+	ALLOC_ZVAL(zv);
+	array_init_size(zv, zend_hash_num_elements(obj->recipients));
+	zend_hash_copy(Z_ARRVAL_P(zv), obj->recipients, (copy_ctor_func_t)zval_add_ref, (void*)&tmp, sizeof(zval*));
+	zend_hash_update(props, "recipients", sizeof("recipients"), (void*)&zv, sizeof(zval*), NULL);
 
 	return props;
 }
@@ -460,7 +465,7 @@ static void pmtamsg_dtor(void* v TSRMLS_DC)
 	if (obj->envid)      { efree(obj->envid);               }
 	if (obj->jobid)      { efree(obj->jobid);               }
 	if (obj->vmta)       { efree(obj->vmta);                }
-	if (obj->recipients) { zval_ptr_dtor(&obj->recipients); }
+	if (obj->recipients) { FREE_HASHTABLE(obj->recipients); }
 	if (obj->msg)        { PmtaMsgFree(obj->msg);           }
 
 	zend_object_std_dtor(&(obj->obj) TSRMLS_CC);
@@ -519,8 +524,8 @@ static PHP_METHOD(PmtaMessage, __construct)
 
 	obj->originator = estrndup(originator, originator_len);
 
-	MAKE_STD_ZVAL(obj->recipients);
-	array_init(obj->recipients);
+	ALLOC_HASHTABLE(obj->recipients);
+	zend_hash_init(obj->recipients, 32, NULL, ZVAL_PTR_DTOR, 0);
 }
 
 /**
@@ -703,7 +708,7 @@ static PHP_METHOD(PmtaMessage, addRecipient)
 	res  = PmtaMsgAddRecipient(obj->msg, rcpt);
 	if (TRUE == res) {
 		Z_ADDREF_P(recipient);
-		add_next_index_zval(obj->recipients, recipient);
+		zend_hash_next_index_insert(obj->recipients, (void*)&recipient, sizeof(zval*), NULL);
 		lock_recipient(recipient TSRMLS_CC);
 		RETURN_TRUE;
 	}
@@ -783,7 +788,6 @@ zend_function_entry pmta_msg_class_methods[] = {
 void pmtamsg_register_class(TSRMLS_D)
 {
 	zend_class_entry e;
-	size_t i;
 
 	INIT_CLASS_ENTRY(e, "PmtaMessage", pmta_msg_class_methods);
 
@@ -801,10 +805,10 @@ void pmtamsg_register_class(TSRMLS_D)
 	pmtamsg_object_handlers.get_property_ptr_ptr = NULL;
 	pmtamsg_object_handlers.get_properties       = pmtamsg_get_properties;
 
-	zend_declare_class_constant_long(pmta_msg_class, PHPPMTA_SL("RETURN_HEADERS"),  PmtaMsgRETURN_HEADERS TSRMLS_CC);
-	zend_declare_class_constant_long(pmta_msg_class, PHPPMTA_SL("RETURN_FULL"),     PmtaMsgRETURN_FULL TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_msg_class, ZEND_STRL("RETURN_HEADERS"),  PmtaMsgRETURN_HEADERS TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_msg_class, ZEND_STRL("RETURN_FULL"),     PmtaMsgRETURN_FULL TSRMLS_CC);
 
-	zend_declare_class_constant_long(pmta_msg_class, PHPPMTA_SL("ENCODING_7BIT"),   PmtaMsgENCODING_7BIT TSRMLS_CC);
-	zend_declare_class_constant_long(pmta_msg_class, PHPPMTA_SL("ENCODING_8BIT"),   PmtaMsgENCODING_8BIT TSRMLS_CC);
-	zend_declare_class_constant_long(pmta_msg_class, PHPPMTA_SL("ENCODING_BASE64"), PmtaMsgENCODING_BASE64 TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_msg_class, ZEND_STRL("ENCODING_7BIT"),   PmtaMsgENCODING_7BIT TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_msg_class, ZEND_STRL("ENCODING_8BIT"),   PmtaMsgENCODING_8BIT TSRMLS_CC);
+	zend_declare_class_constant_long(pmta_msg_class, ZEND_STRL("ENCODING_BASE64"), PmtaMsgENCODING_BASE64 TSRMLS_CC);
 }
