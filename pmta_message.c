@@ -409,47 +409,43 @@ static HashTable* pmtamsg_get_properties(zval* object TSRMLS_DC)
 	zval* zv;
 	zval* tmp;
 
-	if (!obj->msg || GC_G(gc_active)) {
-		return props;
-	}
-
 	if (obj->originator) {
-		ALLOC_ZVAL(zv);
+		ALLOC_INIT_ZVAL(zv);
 		ZVAL_STRING(zv, obj->originator, 1);
 		zend_hash_update(props, "originator", sizeof("originator"), &zv, sizeof(zval*), NULL);
 	}
 
 	if (obj->envid) {
-		ALLOC_ZVAL(zv);
+		ALLOC_INIT_ZVAL(zv);
 		ZVAL_STRING(zv, obj->envid, 1);
 		zend_hash_update(props, "envelope_id", sizeof("envelope_id"), &zv, sizeof(zval*), NULL);
 	}
 
 	if (obj->vmta) {
-		ALLOC_ZVAL(zv);
+		ALLOC_INIT_ZVAL(zv);
 		ZVAL_STRING(zv, obj->vmta, 1);
 		zend_hash_update(props, "vmta", sizeof("vmta"), &zv, sizeof(zval*), NULL);
 	}
 
 	if (obj->jobid) {
-		ALLOC_ZVAL(zv);
+		ALLOC_INIT_ZVAL(zv);
 		ZVAL_STRING(zv, obj->jobid, 1);
 		zend_hash_update(props, "jobid", sizeof("jobid"), &zv, sizeof(zval*), NULL);
 	}
 
-	ALLOC_ZVAL(zv);
+	ALLOC_INIT_ZVAL(zv);
 	ZVAL_LONG(zv, obj->rettype);
 	zend_hash_update(props, "return_type", sizeof("return_type"), &zv, sizeof(zval*), NULL);
 
-	ALLOC_ZVAL(zv);
+	ALLOC_INIT_ZVAL(zv);
 	ZVAL_LONG(zv, obj->encoding);
 	zend_hash_update(props, "encoding", sizeof("encoding"), &zv, sizeof(zval*), NULL);
 
-	ALLOC_ZVAL(zv);
+	ALLOC_INIT_ZVAL(zv);
 	ZVAL_LONG(zv, obj->verp);
 	zend_hash_update(props, "verp", sizeof("verp"), &zv, sizeof(zval*), NULL);
 
-	ALLOC_ZVAL(zv);
+	ALLOC_INIT_ZVAL(zv);
 	array_init_size(zv, zend_hash_num_elements(obj->recipients));
 	zend_hash_copy(Z_ARRVAL_P(zv), obj->recipients, (copy_ctor_func_t)zval_add_ref, (void*)&tmp, sizeof(zval*));
 	zend_hash_update(props, "recipients", sizeof("recipients"), (void*)&zv, sizeof(zval*), NULL);
@@ -461,11 +457,11 @@ static void pmtamsg_dtor(void* v TSRMLS_DC)
 {
 	struct pmtamsg_object* obj = v;
 
-	if (obj->originator) { efree(obj->originator);          }
-	if (obj->envid)      { efree(obj->envid);               }
-	if (obj->jobid)      { efree(obj->jobid);               }
-	if (obj->vmta)       { efree(obj->vmta);                }
-	if (obj->msg)        { PmtaMsgFree(obj->msg);           }
+	if (obj->originator) { efree(obj->originator); }
+	if (obj->envid)      { efree(obj->envid);      }
+	if (obj->jobid)      { efree(obj->jobid);      }
+	if (obj->vmta)       { efree(obj->vmta);       }
+	if (obj->msg)        { PmtaMsgFree(obj->msg);  }
 	if (obj->recipients) {
 		zend_hash_destroy(obj->recipients);
 		FREE_HASHTABLE(obj->recipients);

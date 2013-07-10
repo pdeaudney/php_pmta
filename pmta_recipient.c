@@ -308,21 +308,17 @@ static HashTable* pmtarcpt_get_properties(zval* object TSRMLS_DC)
 	zval* zv;
 	zval* tmp;
 
-	if (GC_G(gc_active)) {
-		return props;
-	}
-
 	if (obj->address) {
-		ALLOC_ZVAL(zv);
+		ALLOC_INIT_ZVAL(zv);
 		ZVAL_STRING(zv, obj->address, 1);
 		zend_hash_update(props, "address", sizeof("address"), &zv, sizeof(zval*), NULL);
 	}
 
-	ALLOC_ZVAL(zv);
+	ALLOC_INIT_ZVAL(zv);
 	ZVAL_LONG(zv, obj->notify);
 	zend_hash_update(props, "notify", sizeof("notify"), &zv, sizeof(zval*), NULL);
 
-	ALLOC_ZVAL(zv);
+	ALLOC_INIT_ZVAL(zv);
 	array_init_size(zv, zend_hash_num_elements(obj->vars));
 	zend_hash_copy(Z_ARRVAL_P(zv), obj->vars, (copy_ctor_func_t)zval_add_ref, (void*)&tmp, sizeof(zval*));
 	zend_hash_update(props, "variables", sizeof("variables"), (void*)&zv, sizeof(zval*), NULL);
@@ -334,8 +330,8 @@ static void pmtarcpt_dtor(void* v TSRMLS_DC)
 {
 	struct pmtarcpt_object* obj = v;
 
-	if (obj->address)  { efree(obj->address);       }
-	if (obj->rcpt)     { PmtaRcptFree(obj->rcpt);   }
+	if (obj->address)  { efree(obj->address);     }
+	if (obj->rcpt)     { PmtaRcptFree(obj->rcpt); }
 	if (obj->vars) {
 		zend_hash_destroy(obj->vars);
 		FREE_HASHTABLE(obj->vars);
@@ -455,9 +451,9 @@ static PHP_METHOD(PmtaRecipient, defineVariable)
 	res = PmtaRcptDefineVariable(obj->rcpt, name, value);
 	if (TRUE == res) {
 		zval* tmp;
-		ALLOC_ZVAL(tmp);
+		ALLOC_INIT_ZVAL(tmp);
 		ZVAL_STRINGL(tmp, value, value_len, 1);
-		zend_symtable_update(obj->vars, name, name_len + 1, (void*)tmp, sizeof(zval*), NULL);
+		zend_symtable_update(obj->vars, name, name_len + 1, (void*)&tmp, sizeof(zval*), NULL);
 		RETURN_TRUE;
 	}
 
