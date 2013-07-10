@@ -4,7 +4,7 @@
  * @author Vladimir Kolesnikov <vladimir@extrememember.com>
  * @brief Implementation of @c PmtaError, @c PmtaErrorConnection, @c PmtaErrorRecipient and @c PmtaErrorMessage classes
  * @details
-<PRE>
+@code{.php}
 class PmtaError extends Exception
 {
 	const OUT_OF_MEMORY    = PmtaApiERROR_OutOfMemory;
@@ -19,7 +19,7 @@ class PmtaError extends Exception
 final class PmtaErrorConnection extends PmtaError {}
 final class PmtaErrorRecipient  extends PmtaError {}
 final class PmtaErrorMessage    extends PmtaError {}
-</PRE>
+@endcode
 */
 
 #include "pmta_error.h"
@@ -77,9 +77,13 @@ static
 const
 #endif
 zend_function_entry pmta_error_class_methods[] = {
-	{ NULL, NULL, NULL, 0, 0 }
+	PHP_FE_END
 };
 
+/**
+ * @brief Registers @c PmtaError, @c PmtaErrorConnection, @c PmtaErrorRecipient and @c PmtaErrorMessage classes with Zend
+ * @param tsrm_ls Internally used by Zend
+ */
 void pmtaerror_register_class(TSRMLS_D)
 {
 	zend_class_entry e;

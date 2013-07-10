@@ -5,23 +5,23 @@
  * @brief Exposes @c PmtaError, @c PmtaErrorConnection, @c PmtaErrorRecipient and @c PmtaErrorMessage classes
  * @note If @c HAVE_SPL macro evaluates to non-zero, @c PmtaError class is derived from @c RuntimeException, not from @c Exception
  * @details
- * <PRE>
- * class PmtaError extends Exception
- * {
- * 	const OUT_OF_MEMORY    = PmtaApiERROR_OutOfMemory;
- * 	const ILLEGAL_STATE    = PmtaApiERROR_IllegalState;
- * 	const ILLEGAL_ARGUMENT = PmtaApiERROR_IllegalArgument;
- * 	const SECURITY         = PmtaApiERROR_Security;
- * 	const IO               = PmtaApiERROR_IO;
- * 	const SERVICE          = PmtaApiERROR_Service;
- * 	const EMAIL_ADDRESS    = PmtaApiERROR_EmailAddress;
- * 	const PHP_API          = PmtaApiERROR_PHP_API;
- * }
- *
- * final class PmtaErrorConnection extends PmtaError { }
- * final class PmtaErrorRecipient  extends PmtaError { }
- * final class PmtaErrorMessage    extends PmtaError { }
- * </PRE>
+@code{.php}
+class PmtaError extends Exception
+{
+	const OUT_OF_MEMORY    = PmtaApiERROR_OutOfMemory;
+	const ILLEGAL_STATE    = PmtaApiERROR_IllegalState;
+	const ILLEGAL_ARGUMENT = PmtaApiERROR_IllegalArgument;
+	const SECURITY         = PmtaApiERROR_Security;
+	const IO               = PmtaApiERROR_IO;
+	const SERVICE          = PmtaApiERROR_Service;
+	const EMAIL_ADDRESS    = PmtaApiERROR_EmailAddress;
+	const PHP_API          = PmtaApiERROR_PHP_API;
+}
+
+final class PmtaErrorConnection extends PmtaError { }
+final class PmtaErrorRecipient  extends PmtaError { }
+final class PmtaErrorMessage    extends PmtaError { }
+@endcode
  */
 
 #ifdef DOXYGEN
