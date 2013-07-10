@@ -4,7 +4,7 @@
  * @author Vladimir Kolesnikov <vladimir@extrememember.com>
  * @brief @c PmtaConnection class (implementation)
  * @details @c PmtaConnection class implementation
-<PRE>
+@code{.php}
 class PmtaConnection
 {
 	const LOCAL_SERVER = "127.0.0.1";
@@ -71,7 +71,7 @@ class PmtaConnection
 
 	private function __clone() {}
 }
-</PRE>
+@endcode
 */
 
 #include "pmta_connection.h"
@@ -80,26 +80,47 @@ class PmtaConnection
 #include "pmta_common.h"
 #include <submitter/PmtaConn.h>
 
+/**
+ * @brief PmtaConnection object handlers
+ */
 static zend_object_handlers pmtaconn_object_handlers;
 
-struct pmtaconn_object {
-	zend_object obj;
-	PmtaConn conn;
-	char* server;
-	char* username;
-	char* password;
-	int port;
-};
+typedef struct _pmtaconn_object {
+	zend_object obj; /**< zend object data */
+	PmtaConn conn;   /**< PMTA Connection handle */
+	char* server;    /**< PowerMTA server */
+	char* username;  /**< Username to authenticate with */
+	char* password;  /**< Password to authenticate with */
+	int port;        /**< Server port */
+} pmtaconn_object;
 
-static inline struct pmtaconn_object* fetchPmtaConnObject(zval* zobj TSRMLS_DC)
+/**
+ * @brief Fetches @c pmtaconn_object
+ * @see pmtaconn_object
+ * @param zobj @c PmtaConnection instance
+ * @return pmtaconn_object associated with @a zobj
+ * @pre <tt>Z_TYPE_P(zobj) == IS_OBJECT && instanceof_function(Z_OBJCE_P(zobj), pmta_conn_class TSRMLS_CC)</tt>
+ */
+static inline pmtaconn_object* fetchPmtaConnObject(zval* zobj TSRMLS_DC)
 {
-	return (struct pmtaconn_object*)zend_objects_get_address(zobj TSRMLS_CC);
+	return (pmtaconn_object*)zend_objects_get_address(zobj TSRMLS_CC);
 }
 
-static zval* pmtaconn_read_property_internal(struct pmtaconn_object* obj, zval* member, int type TSRMLS_DC)
+/**
+ * @brief Internal implementation of @c __get() method
+ * @see pmtaconn_object
+ * @param obj @c pmtaconn_object
+ * @param member Property to read
+ * @param type If @c BP_VAR_IS, error messages will be suppressed
+ * @return Property value
+ * @exception @c E_WARNING if @c member is not a valid property and @a type != @c BP_VAR_IS
+ * @pre <tt>Z_TYPE_P(member) == IS_STRING</tt>
+ * @note Reference count of the result value will be 0
+ */
+static zval* pmtaconn_read_property_internal(pmtaconn_object* obj, zval* member, int type)
 {
 	zval* ret;
-	MAKE_STD_ZVAL(ret);
+	ALLOC_INIT_ZVAL(ret);
 
 	if (ISSTR(member, "server")) {
 		ZVAL_STRING(ret, obj->server, 1);
@@ -115,7 +136,7 @@ static zval* pmtaconn_read_property_internal(struct pmtaconn_object* obj, zval* 
 	}
 	else {
 		if (type != BP_VAR_IS) {
-			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Undefined property PmtaConnection::%s", Z_STRVAL_P(member));
+			zend_error(E_WARNING, "Undefined property PmtaConnection::%s", Z_STRVAL_P(member));
 		}
 
 		ZVAL_NULL(ret);
@@ -125,11 +146,21 @@ static zval* pmtaconn_read_property_internal(struct pmtaconn_object* obj, zval* 
 	return ret;
 }
 
+/**
+ * @brief @c read_property handler
+ * @param object @c PmtaConnection instance
+ * @param member Property to read
+ * @param type Read type (@c BP_VAR_R, @c BP_VAR_IS)
+ * @param key Zend literal associated with @a member
+ * @return Property value
+ * @note Reference count of the result is not incremented
+ * @pre <tt>Z_TYPE_P(object) == IS_OBJECT && instanceof_function(Z_OBJCE_P(object), pmta_conn_class TSRMLS_CC)</tt>
+ */
 static zval* pmtaconn_read_property(zval* object, zval* member, int type ZLK_DC TSRMLS_DC)
 {
 	zval tmp;
 	zval* ret;
-	struct pmtaconn_object* obj = fetchPmtaConnObject(object TSRMLS_CC);
+	pmtaconn_object* obj = fetchPmtaConnObject(object TSRMLS_CC);
 
 	if (obj->obj.ce->type != ZEND_INTERNAL_CLASS) {
 		return zend_get_std_object_handlers()->read_property(object, member, type ZLK_CC TSRMLS_CC);
@@ -141,7 +172,7 @@ static zval* pmtaconn_read_property(zval* object, zval* member, int type ZLK_DC 
 		member = &tmp;
 	}
 
-	ret = pmtaconn_read_property_internal(obj, member, type TSRMLS_CC);
+	ret = pmtaconn_read_property_internal(obj, member, type);
 
 	if (UNEXPECTED(member == &tmp)) {
 		zval_dtor(&tmp);
@@ -150,22 +181,43 @@ static zval* pmtaconn_read_property(zval* object, zval* member, int type ZLK_DC 
 	return ret;
 }
 
-static int pmtaconn_has_property_internal(struct pmtaconn_object* obj, zval* member, int has_set_exists TSRMLS_DC)
+/**
+ * @brief Internal implementation of @c __isset() method
+ * @see pmtaconn_object
+ * @see pmtaconn_has_property
+ * @param obj @c pmtaconn_object
+ * @param member Property to read
+ * @param has_set_exists Additional checks
+ * @return Whether property @a member exists and satisfies @a has_set_exists criterion
+ * @retval 1 Yes
+ * @retval 0 No
+ * @pre <tt>Z_TYPE_P(member) == IS_STRING</tt>
+ */
+static int pmtaconn_has_property_internal(pmtaconn_object* obj, zval* member, int has_set_exists)
 {
 	int retval = 1;
 
 	if (ISSTR(member, "server")) {
-		if (1 == has_set_exists) {
+		if (0 == has_set_exists) {
+			retval = (obj->server != NULL);
+		}
+		else if (1 == has_set_exists) {
 			retval = (obj->server && obj->server[0]);
 		}
 	}
 	else if (ISSTR(member, "username")) {
-		if (1 == has_set_exists) {
+		if (0 == has_set_exists) {
+			retval = (obj->username != NULL);
+		}
+		else if (1 == has_set_exists) {
 			retval = (obj->username && obj->username[0]);
 		}
 	}
 	else if (ISSTR(member, "password")) {
-		if (1 == has_set_exists) {
+		if (0 == has_set_exists) {
+			retval = (obj->password != NULL);
+		}
+		else if (1 == has_set_exists) {
 			retval = (obj->password && obj->password[0]);
 		}
 	}
@@ -182,15 +234,26 @@ static int pmtaconn_has_property_internal(struct pmtaconn_object* obj, zval* mem
 }
 
 /**
- * @property object
- * @property member
- * @property has_set_exists 0 = isset(), 1 = empty()
+ * @param object @c PmtaConnection instance
+ * @param member Property
+ * @param has_set_exists Existence criterion
+ * @param tsrm_ls Internally used by Zend
+ * @return Whether property @a member exists and satisfies @a has_set_exists criterion
+ * @retval 1 Yes
+ * @retval 0 No
+ * @pre <tt>Z_TYPE_P(object) == IS_OBJECT && instanceof_function(Z_OBJCE_P(object), pmta_conn_class TSRMLS_CC)</tt>
+ *
+ * Used to check if a property @a member of the object @a object exists.
+ * @c has_set_exists can be one of the following:
+ * @arg 0 (has) whether property exists and is not NULL
+ * @arg 1 (set) whether property exists and is true
+ * @arg 2 (exists) whether property exists
  */
 static int pmtaconn_has_property(zval* object, zval* member, int has_set_exists ZLK_DC TSRMLS_DC)
 {
 	zval tmp;
 	int retval = 1;
-	struct pmtaconn_object* obj = fetchPmtaConnObject(object TSRMLS_CC);
+	pmtaconn_object* obj = fetchPmtaConnObject(object TSRMLS_CC);
 
 	if (obj->obj.ce->type != ZEND_INTERNAL_CLASS) {
 		return zend_get_std_object_handlers()->has_property(object, member, has_set_exists ZLK_CC TSRMLS_CC);
@@ -202,7 +265,7 @@ static int pmtaconn_has_property(zval* object, zval* member, int has_set_exists 
 		member = &tmp;
 	}
 
-	retval = pmtaconn_has_property_internal(obj, member, has_set_exists TSRMLS_CC);
+	retval = pmtaconn_has_property_internal(obj, member, has_set_exists);
 
 	if (UNEXPECTED(member == &tmp)) {
 		zval_dtor(&tmp);
@@ -211,44 +274,53 @@ static int pmtaconn_has_property(zval* object, zval* member, int has_set_exists 
 	return retval;
 }
 
+/**
+ * @brief @c get_properties handler
+ * @param object @c PmtaConnection instance
+ * @param tsrm_ls Internally used by Zend
+ * @return Hash table with properties of @a object
+ * @pre <tt>Z_TYPE_P(object) == IS_OBJECT && instanceof_function(Z_OBJCE_P(object), pmta_conn_class TSRMLS_CC)</tt>
+ */
 static HashTable* pmtaconn_get_properties(zval* object TSRMLS_DC)
 {
-	struct pmtaconn_object* obj = fetchPmtaConnObject(object TSRMLS_CC);
-	HashTable* props            = zend_std_get_properties(object TSRMLS_CC);
+	pmtaconn_object* obj = fetchPmtaConnObject(object TSRMLS_CC);
+	HashTable* props     = zend_std_get_properties(object TSRMLS_CC);
 	zval* zv;
 
-	if (!obj->conn || GC_G(gc_active)) {
-		return props;
-	}
-
 	if (obj->server) {
-		MAKE_STD_ZVAL(zv);
+		ALLOC_INIT_ZVAL(zv);
 		ZVAL_STRING(zv, obj->server, 1);
 		zend_hash_update(props, "server", sizeof("server"), &zv, sizeof(zval*), NULL);
 	}
 
 	if (obj->username) {
-		MAKE_STD_ZVAL(zv);
+		ALLOC_INIT_ZVAL(zv);
 		ZVAL_STRING(zv, obj->username, 1);
 		zend_hash_update(props, "username", sizeof("username"), &zv, sizeof(zval*), NULL);
 	}
 
 	if (obj->password) {
-		MAKE_STD_ZVAL(zv);
+		ALLOC_INIT_ZVAL(zv);
 		ZVAL_STRING(zv, obj->password, 1);
 		zend_hash_update(props, "password", sizeof("password"), &zv, sizeof(zval*), NULL);
 	}
 
-	MAKE_STD_ZVAL(zv);
+	ALLOC_INIT_ZVAL(zv);
 	ZVAL_LONG(zv, obj->port);
 	zend_hash_update(props, "port", sizeof("port"), &zv, sizeof(zval*), NULL);
 
 	return props;
 }
 
+/**
+ * @brief @c PmtaConnection destructor
+ * @param v @c pmtaconn_object
+ * @param tsrm_ls Internally used by Zend
+ * @details Frees all memory allocated for @c pmtaconn_object and its members
+ */
 static void pmtaconn_dtor(void* v TSRMLS_DC)
 {
-	struct pmtaconn_object* obj = v;
+	pmtaconn_object* obj = v;
 
 	if (obj->server)   { efree(obj->server);      }
 	if (obj->username) { efree(obj->username);    }
@@ -259,9 +331,16 @@ static void pmtaconn_dtor(void* v TSRMLS_DC)
 	efree(obj);
 }
 
+/**
+ * @brief @c PmtaConnection constructor
+ * @param ce Class Entry for @c PmtaConnection
+ * @param tsrm_ls Internally used by Zend
+ * @return Zend Object Value
+ * @details Allocates memory for @c pmtaconn_object and registers the destructor
+ */
 static zend_object_value pmtaconn_ctor(zend_class_entry* ce TSRMLS_DC)
 {
-	struct pmtaconn_object* obj = ecalloc(1, sizeof(struct pmtaconn_object));
+	pmtaconn_object* obj = ecalloc(1, sizeof(pmtaconn_object));
 	zend_object_value retval;
 
 	zend_object_std_init(&(obj->obj), ce TSRMLS_CC);
@@ -298,7 +377,7 @@ static PHP_METHOD(PmtaConnection, __construct)
 	char* password   = NULL;
 	int password_len;
 	BOOL result;
-	struct pmtaconn_object* obj;
+	pmtaconn_object* obj;
 
 	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|slss", &server, &server_len, &port, &username, &username_len, &password, &password_len)) {
 		RETURN_NULL();
@@ -419,7 +498,7 @@ static PHP_METHOD(PmtaConnection, __isset)
  */
 static PHP_METHOD(PmtaConnection, submitMessage)
 {
-	struct pmtaconn_object* obj;
+	pmtaconn_object* obj;
 	PmtaMsg msg;
 	zval* message;
 	BOOL res;
@@ -462,7 +541,7 @@ static PHP_METHOD(PmtaConnection, getLastError)
 	}
 
 	if (return_value_used) {
-		struct pmtaconn_object* obj = fetchPmtaConnObject(getThis() TSRMLS_CC);
+		pmtaconn_object* obj = fetchPmtaConnObject(getThis() TSRMLS_CC);
 		throw_pmta_error(pmta_error_connection_class, PmtaConnGetLastErrorType(obj->conn), PmtaConnGetLastError(obj->conn), &return_value TSRMLS_CC);
 	}
 }
