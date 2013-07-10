@@ -1,6 +1,8 @@
 /**
  * @file pmta_message.c
- * @date 29.09.2010
+ * @date Sep 29, 2010 v0.1
+ * @date Jul 4, 2013 Major code refactoring, use object handlers instead of magic methods
+ * @date Jul 11, 2013 v0.4
  * @author Vladimir Kolesnikov <vladimir@extrememember.com>
  * @brief @c PmtaMessage class implementation
  * @details

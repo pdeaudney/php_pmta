@@ -1,7 +1,8 @@
 /**
  * @file php_pmta.h
  * @brief Common header file
- * @date 28.09.2010
+ * @date Sep 28, 2010 v0.1
+ * @date Jul 11, 2013 v0.4
  * @author Vladimir Kolesnikov <vladimir@extrememember.com>
  */
 
@@ -21,13 +22,13 @@
  * @headerfile php_pmta.h
  * @brief Internal extension name
  */
-#define PHP_PMTA_EXTNAME "PMTA API Wrapper"
+#define PHP_PMTA_EXTNAME "PowerMTA Submission API"
 
 /**
  * @headerfile php_pmta.h
  * @brief Extension version
  */
-#define PHP_PMTA_EXTVER  "0.4"
+#define PHP_PMTA_EXTVER "0.4"
 
 #ifdef HAVE_CONFIG_H
 #	include "config.h"

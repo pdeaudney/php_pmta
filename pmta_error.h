@@ -1,6 +1,7 @@
 /**
  * @file pmta_error.h
- * @date 29.09.2010
+ * @date Sep 29, 2010 v0.1
+ * @date Jul 11, 2013 v0.4
  * @author Vladimir Kolesnikov <vladimir@extrememember.com>
  * @brief Exposes @c PmtaError, @c PmtaErrorConnection, @c PmtaErrorRecipient and @c PmtaErrorMessage classes
  * @note If @c HAVE_SPL macro evaluates to non-zero, @c PmtaError class is derived from @c RuntimeException, not from @c Exception

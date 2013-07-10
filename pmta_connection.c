@@ -1,6 +1,8 @@
 /**
  * @file pmta_connection.c
- * @date 29.09.2010
+ * @date Sep 29, 2010 v0.1
+ * @date Jul 4, 2013 Major code refactoring, use object handlers instead of magic methods
+ * @date Jul 11, 2013 v0.4
  * @author Vladimir Kolesnikov <vladimir@extrememember.com>
  * @brief @c PmtaConnection class (implementation)
  * @details @c PmtaConnection class implementation
@@ -81,12 +83,15 @@ class PmtaConnection
 #include <submitter/PmtaConn.h>
 
 /**
- * @brief PmtaConnection object handlers
+ * @brief @c PmtaConnection object handlers
  */
 static zend_object_handlers pmtaconn_object_handlers;
 
+/**
+ * @brief Internal properties of @c PmtaConnection
+ */
 typedef struct _pmtaconn_object {
-	zend_object obj; /**< zend object data */
+	zend_object obj; /**< Zend object data */
 	PmtaConn conn;   /**< PMTA Connection handle */
 	char* server;    /**< PowerMTA server */
 	char* username;  /**< Username to authenticate with */
@@ -364,6 +369,7 @@ static zend_object_value pmtaconn_ctor(zend_class_entry* ce TSRMLS_DC)
  * @param this_ptr Internally used by Zend (@c $this)
  * @param return_value_used Internally used by Zend (whether the return value is used)
  * @param tsrm_ls Internally used by Zend
+ * @throw pmta_error_connection_class
  *
  * Class constructor. Allocates a PmtaConn object and connects to the server. Throws PmtaErrorConnection on failure
  */
@@ -457,7 +463,7 @@ static PHP_METHOD(PmtaConnection, __get)
 		RETURN_NULL();
 	}
 
-	retval = pmtaconn_read_property_internal(fetchPmtaConnObject(getThis() TSRMLS_CC), property, BP_VAR_R TSRMLS_CC);
+	retval = pmtaconn_read_property_internal(fetchPmtaConnObject(getThis() TSRMLS_CC), property, BP_VAR_R);
 	Z_ADDREF_P(retval);
 	RETURN_ZVAL(retval, 1, 1);
 }
@@ -480,7 +486,7 @@ static PHP_METHOD(PmtaConnection, __isset)
 		RETURN_NULL();
 	}
 
-	retval = pmtaconn_has_property_internal(fetchPmtaConnObject(getThis() TSRMLS_CC), property, 1 TSRMLS_CC);
+	retval = pmtaconn_has_property_internal(fetchPmtaConnObject(getThis() TSRMLS_CC), property, 1);
 	RETURN_BOOL(retval);
 }
 
@@ -576,12 +582,12 @@ zend_function_entry pmta_conn_class_methods[] = {
 	PHP_ME(PmtaConnection, __isset,          arginfo_get,       ZEND_ACC_PUBLIC)
 	PHP_ME(PmtaConnection, submitMessage,    arginfo_submit,    ZEND_ACC_PUBLIC)
 	PHP_ME(PmtaConnection, getLastError,     arginfo_empty,     ZEND_ACC_PUBLIC)
+	PHP_ME_MAPPING(__destruct, empty_destructor, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_DTOR)
 	PHP_FE_END
 };
 
 /**
- * @brief Registers @c PmtaConnection class with Zend
- * @param tsrm_ls Internally used by Zend
+ * Registers @c PmtaConnection class with Zend
  */
 void pmtaconn_register_class(TSRMLS_D)
 {
