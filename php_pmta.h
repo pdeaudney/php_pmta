@@ -118,11 +118,11 @@ extern zend_module_entry pmta_module_entry;
  * @brief This structure declares module global variables
  */
 ZEND_BEGIN_MODULE_GLOBALS(pmta)
-	zend_bool use_exceptions; /**< Whether to throw exceptions instead of returning error */
 	char* server;             /**< Default server to use in PmtaConnection::__construct() */
-	int port;                 /**< Default port to use in PmtaConnection::__construct() */
 	char* username;           /**< Default username to use in PmtaConnection::__construct() */
 	char* password;           /**< Default password to use in PmtaConnection::__construct() */
+	int port;                 /**< Default port to use in PmtaConnection::__construct() */
+	zend_bool use_exceptions; /**< Whether to throw exceptions instead of returning error */
 ZEND_END_MODULE_GLOBALS(pmta);
 
 /**
