@@ -579,6 +579,10 @@ zend_function_entry pmta_conn_class_methods[] = {
 	PHP_FE_END
 };
 
+/**
+ * @brief Registers @c PmtaConnection class with Zend
+ * @param tsrm_ls Internally used by Zend
+ */
 void pmtaconn_register_class(TSRMLS_D)
 {
 	zend_class_entry e;
