@@ -465,8 +465,11 @@ static void pmtamsg_dtor(void* v TSRMLS_DC)
 	if (obj->envid)      { efree(obj->envid);               }
 	if (obj->jobid)      { efree(obj->jobid);               }
 	if (obj->vmta)       { efree(obj->vmta);                }
-	if (obj->recipients) { FREE_HASHTABLE(obj->recipients); }
 	if (obj->msg)        { PmtaMsgFree(obj->msg);           }
+	if (obj->recipients) {
+		zend_hash_destroy(obj->recipients);
+		FREE_HASHTABLE(obj->recipients);
+	}
 
 	zend_object_std_dtor(&(obj->obj) TSRMLS_CC);
 	efree(obj);

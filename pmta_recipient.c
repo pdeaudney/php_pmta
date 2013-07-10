@@ -335,8 +335,11 @@ static void pmtarcpt_dtor(void* v TSRMLS_DC)
 	struct pmtarcpt_object* obj = v;
 
 	if (obj->address)  { efree(obj->address);       }
-	if (obj->vars)     { FREE_HASHTABLE(obj->vars); }
 	if (obj->rcpt)     { PmtaRcptFree(obj->rcpt);   }
+	if (obj->vars) {
+		zend_hash_destroy(obj->vars);
+		FREE_HASHTABLE(obj->vars);
+	}
 
 	zend_object_std_dtor(&(obj->obj) TSRMLS_CC);
 	efree(obj);
