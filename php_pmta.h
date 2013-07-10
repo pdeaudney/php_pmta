@@ -88,16 +88,6 @@
 
 #define ISSTR(pzv, str) ((Z_STRLEN_P(pzv) == strlen(str)) && !strcmp(Z_STRVAL_P(pzv), str))
 
-/**
- * This structure is used internally to declare private class properties
- */
-struct props {
-	char* name;       /**< Property name */
-	int len;          /**< Property name length */
-	char* comment;    /**< PHPDoc comment */
-	int comment_len;  /**< PHPDoc comment length */
-};
-
 PHPPMTA_VISIBILITY_HIDDEN extern zend_class_entry* pmta_conn_class;             /**< PmtaConnection class */
 PHPPMTA_VISIBILITY_HIDDEN extern zend_class_entry* pmta_error_connection_class; /**< PmtaErrorCoonection class */
 PHPPMTA_VISIBILITY_HIDDEN extern zend_class_entry* pmta_error_recipient_class;  /**< PmtaErrorMessage class */
