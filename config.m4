@@ -1,4 +1,4 @@
-PHP_ARG_WITH(pmta, [Whether to enable PMTA PHP API], [ --with-pmta[=DIR]     Enable PMTA Submission API])
+PHP_ARG_WITH(pmta, [Whether to enable PowerMTA PHP Submission API], [ --with-pmta[=DIR]     Enable PowerMTA Submission API])
 
 if test "$PHP_PMTA" != "no"; then
 	for i in "$PHP_PMTA" /opt/pmta/api; do
@@ -23,6 +23,7 @@ if test "$PHP_PMTA" != "no"; then
 	)
 
 	PHP_SUBST(PMTA_SHARED_LIBADD)
-	PHP_NEW_EXTENSION(pmta, [extension.c pmta_error.c pmta_connection.c pmta_recipient.c pmta_message.c], $ext_shared)
+	PHP_NEW_EXTENSION(pmta, [extension.c pmta_error.c pmta_connection.c pmta_recipient.c pmta_message.c], $ext_shared,, [-Wall])
+
 	PHP_ADD_MAKEFILE_FRAGMENT
 fi
