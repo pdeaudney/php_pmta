@@ -6,8 +6,8 @@
  * @author Vladimir Kolesnikov <vladimir@extrememember.com>
  * @brief @c PmtaMessage class implementation
  * @details
-<PRE>
-final class PmtaMessage
+@code{.php}
+class PmtaMessage
 {
 	const RETURN_HEADERS = PmtaMsgRETURN_HEADERS;
 	const RETURN_FULL    = PmtaMsgRETURN_FULL;
@@ -128,7 +128,7 @@ final class PmtaMessage
 
 	private function __clone() {}
 }
-</PRE>
+@endcode
  */
 
 #include "pmta_message.h"
@@ -136,24 +136,37 @@ final class PmtaMessage
 #include "pmta_error.h"
 #include "pmta_common.h"
 
+/**
+ * @brief @c PmtaMessage object handlers
+ */
 static zend_object_handlers pmtamsg_object_handlers;
 
-struct pmtamsg_object {
-	zend_object obj;
-	PmtaMsg msg;
-	char* originator;
-	char* envid;
-	char* vmta;
-	char* jobid;
-	HashTable* recipients;
-	int rettype;
-	int encoding;
-	int verp;
-};
+/**
+ * @brief Internal properties of @c PmtaMessage
+ */
+typedef struct _pmtamsg_object {
+	zend_object obj;        /**< Zend object data */
+	PmtaMsg msg;            /**< PMTA Message handle */
+	char* originator;       /**< Sender */
+	char* envid;            /**< EnvID */
+	char* vmta;             /**< Virtual MTA */
+	char* jobid;            /**< JobID */
+	HashTable* recipients;  /**< Recipients */
+	int rettype;            /**< Return type */
+	int encoding;           /**< Message encoding */
+	int verp;               /**< Whether VERP should be used */
+} pmtamsg_object;
 
-static inline struct pmtamsg_object* fetchPmtaMsgObject(zval* zobj TSRMLS_DC)
+/**
+ * @brief Fetches @c pmtamsg_object
+ * @see pmtamsg_object
+ * @param zobj @c PmtaMessage instance
+ * @return pmtamsg_object associated with @a zobj
+ * @pre <tt>Z_TYPE_P(zobj) == IS_OBJECT && instanceof_function(Z_OBJCE_P(zobj), pmta_msg_class TSRMLS_CC)</tt>
+ */
+static inline pmtamsg_object* fetchPmtaMsgObject(zval* zobj TSRMLS_DC)
 {
-	return (struct pmtamsg_object*)zend_objects_get_address(zobj TSRMLS_CC);
+	return (pmtamsg_object*)zend_objects_get_address(zobj TSRMLS_CC);
 }
 
 PmtaMsg getMessage(zval* object TSRMLS_DC)
@@ -161,10 +174,21 @@ PmtaMsg getMessage(zval* object TSRMLS_DC)
 	return fetchPmtaMsgObject(object TSRMLS_CC)->msg;
 }
 
-static zval* pmtamsg_read_property_internal(struct pmtamsg_object* obj, zval* member, int type TSRMLS_DC)
+/**
+ * @brief Internal implementation of @c __get() method
+ * @see pmtamsg_object
+ * @param obj @c pmtamsg_object
+ * @param member Property to read
+ * @param type If @c BP_VAR_IS, error messages will be suppressed
+ * @return Property value
+ * @exception @c E_WARNING if @c member is not a valid property and @a type != @c BP_VAR_IS
+ * @pre <tt>Z_TYPE_P(member) == IS_STRING</tt>
+ * @note Reference count of the result value will be 0
+ */
+static zval* pmtamsg_read_property_internal(pmtamsg_object* obj, zval* member, int type)
 {
 	zval* ret;
-	MAKE_STD_ZVAL(ret);
+	ALLOC_INIT_ZVAL(ret);
 
 	if (ISSTR(member, "originator")) {
 		ZVAL_STRING(ret, obj->originator, 1);
@@ -194,22 +218,31 @@ static zval* pmtamsg_read_property_internal(struct pmtamsg_object* obj, zval* me
 	}
 	else {
 		if (type != BP_VAR_IS) {
-			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Undefined property PmtaMessage::%s", Z_STRVAL_P(member));
+			zend_error(E_WARNING, "Undefined property PmtaMessage::%s", Z_STRVAL_P(member));
 		}
 
 		ZVAL_NULL(ret);
 	}
 
-	assert(Z_REFCOUNT_P(ret) == 1);
 	Z_SET_REFCOUNT_P(ret, 0);
 	return ret;
 }
 
+/**
+ * @brief @c read_property handler
+ * @param object @c PmtaMessage instance
+ * @param member Property to read
+ * @param type Read type (@c BP_VAR_R, @c BP_VAR_IS)
+ * @param key Zend literal associated with @a member
+ * @return Property value
+ * @note Reference count of the result is not incremented
+ * @pre <tt>Z_TYPE_P(object) == IS_OBJECT && instanceof_function(Z_OBJCE_P(object), pmta_msg_class TSRMLS_CC)</tt>
+ */
 static zval* pmtamsg_read_property(zval* object, zval* member, int type ZLK_DC TSRMLS_DC)
 {
 	zval tmp;
 	zval* ret;
-	struct pmtamsg_object* obj = fetchPmtaMsgObject(object TSRMLS_CC);
+	pmtamsg_object* obj = fetchPmtaMsgObject(object TSRMLS_CC);
 
 	if (obj->obj.ce->type != ZEND_INTERNAL_CLASS) {
 		return zend_get_std_object_handlers()->read_property(object, member, type ZLK_CC TSRMLS_CC);
@@ -221,7 +254,7 @@ static zval* pmtamsg_read_property(zval* object, zval* member, int type ZLK_DC T
 		member = &tmp;
 	}
 
-	ret = pmtamsg_read_property_internal(obj, member, type TSRMLS_CC);
+	ret = pmtamsg_read_property_internal(obj, member, type);
 
 	if (UNEXPECTED(member == &tmp)) {
 		zval_dtor(&tmp);
@@ -230,27 +263,51 @@ static zval* pmtamsg_read_property(zval* object, zval* member, int type ZLK_DC T
 	return ret;
 }
 
-static int pmtamsg_has_property_internal(struct pmtamsg_object* obj, zval* member, int has_set_exists TSRMLS_DC)
+/**
+ * @brief Internal implementation of @c __isset() method
+ * @see pmtamsg_object
+ * @see pmtamsg_has_property
+ * @param obj @c pmtamsg_object
+ * @param member Property to read
+ * @param has_set_exists Additional checks
+ * @return Whether property @a member exists and satisfies @a has_set_exists criterion
+ * @retval 1 Yes
+ * @retval 0 No
+ * @pre <tt>Z_TYPE_P(member) == IS_STRING</tt>
+ */
+static int pmtamsg_has_property_internal(pmtamsg_object* obj, zval* member, int has_set_exists TSRMLS_DC)
 {
 	int retval = 1;
 
 	if (ISSTR(member, "originator")) {
-		if (1 == has_set_exists) {
+		if (0 == has_set_exists) {
+			retval = (obj->originator != NULL);
+		}
+		else if (1 == has_set_exists) {
 			retval = (obj->originator && obj->originator[0]);
 		}
 	}
 	else if (ISSTR(member, "envelope_id")) {
-		if (1 == has_set_exists) {
+		if (0 == has_set_exists) {
+			retval = (obj->envid != NULL);
+		}
+		else if (1 == has_set_exists) {
 			retval = (obj->envid && obj->envid[0]);
 		}
 	}
 	else if (ISSTR(member, "vmta")) {
-		if (1 == has_set_exists) {
+		if (0 == has_set_exists) {
+			retval = (obj->vmta != NULL);
+		}
+		else if (1 == has_set_exists) {
 			retval = (obj->vmta && obj->vmta[0]);
 		}
 	}
 	else if (ISSTR(member, "jobid")) {
-		if (1 == has_set_exists) {
+		if (0 == has_set_exists) {
+			retval = (obj->jobid != NULL);
+		}
+		else if (1 == has_set_exists) {
 			retval = (obj->jobid && obj->jobid[0]);
 		}
 	}
@@ -270,7 +327,10 @@ static int pmtamsg_has_property_internal(struct pmtamsg_object* obj, zval* membe
 		}
 	}
 	else if (ISSTR(member, "recipients")) {
-		if (1 == has_set_exists) {
+		if (0 == has_set_exists) {
+			retval = (obj->recipients != NULL);
+		}
+		else if (1 == has_set_exists) {
 			retval = (obj->recipients && zend_hash_num_elements(obj->recipients));
 		}
 	}
@@ -282,15 +342,26 @@ static int pmtamsg_has_property_internal(struct pmtamsg_object* obj, zval* membe
 }
 
 /**
- * @property object
- * @property member
- * @property has_set_exists 0 = isset(), 1 = empty()
+ * @param object @c PmtaMessage instance
+ * @param member Property
+ * @param has_set_exists Existence criterion
+ * @param tsrm_ls Internally used by Zend
+ * @return Whether property @a member exists and satisfies @a has_set_exists criterion
+ * @retval 1 Yes
+ * @retval 0 No
+ * @pre <tt>Z_TYPE_P(object) == IS_OBJECT && instanceof_function(Z_OBJCE_P(object), pmta_msg_class TSRMLS_CC)</tt>
+ *
+ * Used to check if a property @a member of the object @a object exists.
+ * @c has_set_exists can be one of the following:
+ * @arg 0 (has) whether property exists and is not NULL
+ * @arg 1 (set) whether property exists and is true
+ * @arg 2 (exists) whether property exists
  */
 static int pmtamsg_has_property(zval* object, zval* member, int has_set_exists ZLK_DC TSRMLS_DC)
 {
 	zval tmp;
 	int retval = 1;
-	struct pmtamsg_object* obj = fetchPmtaMsgObject(object TSRMLS_CC);
+	pmtamsg_object* obj = fetchPmtaMsgObject(object TSRMLS_CC);
 
 	if (obj->obj.ce->type != ZEND_INTERNAL_CLASS) {
 		return zend_get_std_object_handlers()->has_property(object, member, has_set_exists ZLK_CC TSRMLS_CC);
@@ -311,7 +382,16 @@ static int pmtamsg_has_property(zval* object, zval* member, int has_set_exists Z
 	return retval;
 }
 
-static void pmtamsg_write_property_internal(struct pmtamsg_object* obj, zval* member, zval* value TSRMLS_DC)
+/**
+ * @brief Internal implementation of @c __set() method
+ * @see pmtamsg_object
+ * @param obj @c pmtamsg_object
+ * @param member Property to set
+ * @param value Value to set
+ * @exception @c E_WARNING if @c member is not a valid property
+ * @pre <tt>Z_TYPE_P(member) == IS_STRING</tt>
+ */
+static void pmtamsg_write_property_internal(pmtamsg_object* obj, zval* member, zval* value TSRMLS_DC)
 {
 	BOOL res;
 
@@ -378,14 +458,23 @@ static void pmtamsg_write_property_internal(struct pmtamsg_object* obj, zval* me
 		}
 	}
 	else {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Cannot set property PmtaMessage::%s", Z_STRVAL_P(member));
+		zend_error(E_WARNING, "Cannot set property PmtaMessage::%s", Z_STRVAL_P(member));
 	}
 }
 
+/**
+ * @brief @c write_property handler
+ * @param object @c PmtaMessage instance
+ * @param member Property to set
+ * @param value New value
+ * @param key Zend literal associated with @a member
+ * @note Reference count of the result is not incremented
+ * @pre <tt>Z_TYPE_P(object) == IS_OBJECT && instanceof_function(Z_OBJCE_P(object), pmta_msg_class TSRMLS_CC)</tt>
+ */
 static void pmtamsg_write_property(zval* object, zval* member, zval* value ZLK_DC TSRMLS_DC)
 {
 	zval tmp;
-	struct pmtamsg_object* obj = fetchPmtaMsgObject(object TSRMLS_CC);
+	pmtamsg_object* obj = fetchPmtaMsgObject(object TSRMLS_CC);
 
 	if (obj->obj.ce->type != ZEND_INTERNAL_CLASS) {
 		return zend_get_std_object_handlers()->write_property(object, member, value ZLK_CC TSRMLS_CC);
@@ -404,10 +493,17 @@ static void pmtamsg_write_property(zval* object, zval* member, zval* value ZLK_D
 	}
 }
 
+/**
+ * @brief @c get_properties handler
+ * @param object @c PmtaMessage instance
+ * @param tsrm_ls Internally used by Zend
+ * @return Hash table with properties of @a object
+ * @pre <tt>Z_TYPE_P(object) == IS_OBJECT && instanceof_function(Z_OBJCE_P(object), pmta_msg_class TSRMLS_CC)</tt>
+ */
 static HashTable* pmtamsg_get_properties(zval* object TSRMLS_DC)
 {
-	struct pmtamsg_object* obj = fetchPmtaMsgObject(object TSRMLS_CC);
-	HashTable* props           = zend_std_get_properties(object TSRMLS_CC);
+	pmtamsg_object* obj = fetchPmtaMsgObject(object TSRMLS_CC);
+	HashTable* props    = zend_std_get_properties(object TSRMLS_CC);
 	zval* zv;
 	zval* tmp;
 
@@ -455,9 +551,15 @@ static HashTable* pmtamsg_get_properties(zval* object TSRMLS_DC)
 	return props;
 }
 
+/**
+ * @brief @c PmtaMessage destructor
+ * @param v @c pmtamsg_object
+ * @param tsrm_ls Internally used by Zend
+ * @details Frees all memory allocated for @c pmtamsg_object and its members
+ */
 static void pmtamsg_dtor(void* v TSRMLS_DC)
 {
-	struct pmtamsg_object* obj = v;
+	pmtamsg_object* obj = v;
 
 	if (obj->originator) { efree(obj->originator); }
 	if (obj->envid)      { efree(obj->envid);      }
@@ -473,9 +575,16 @@ static void pmtamsg_dtor(void* v TSRMLS_DC)
 	efree(obj);
 }
 
+/**
+ * @brief @c PmtaMessage constructor
+ * @param ce Class Entry for @c PmtaMessage
+ * @param tsrm_ls Internally used by Zend
+ * @return Zend Object Value
+ * @details Allocates memory for @c pmtamsg_object and registers the destructor
+ */
 static zend_object_value pmtamsg_ctor(zend_class_entry* ce TSRMLS_DC)
 {
-	struct pmtamsg_object* obj = ecalloc(1, sizeof(struct pmtamsg_object));
+	pmtamsg_object* obj = ecalloc(1, sizeof(pmtamsg_object));
 	zend_object_value retval;
 
 	zend_object_std_init(&(obj->obj), ce TSRMLS_CC);
@@ -492,16 +601,18 @@ static zend_object_value pmtamsg_ctor(zend_class_entry* ce TSRMLS_DC)
 }
 
 /**
+ * @brief public function __construct($originator);
  * @param ht Internally used by Zend (number of arguments)
  * @param return_value Internally used by Zend (return value)
  * @param return_value_ptr Internally used by Zend
  * @param this_ptr Internally used by Zend (@c $this)
  * @param return_value_used Internally used by Zend (whether the return value is used)
  * @param tsrm_ls Internally used by Zend
+ * @throw pmta_error_message_class
  */
 static PHP_METHOD(PmtaMessage, __construct)
 {
-	struct pmtamsg_object* obj;
+	pmtamsg_object* obj;
 	char* originator;
 	int originator_len;
 	BOOL result;
@@ -530,6 +641,7 @@ static PHP_METHOD(PmtaMessage, __construct)
 }
 
 /**
+ * @brief public function __get($property);
  * @param ht Internally used by Zend (number of arguments)
  * @param return_value Internally used by Zend (return value)
  * @param return_value_ptr Internally used by Zend
@@ -546,12 +658,18 @@ static PHP_METHOD(PmtaMessage, __get)
 		RETURN_NULL();
 	}
 
-	retval = pmtamsg_read_property_internal(fetchPmtaMsgObject(getThis() TSRMLS_CC), property, BP_VAR_R TSRMLS_CC);
+	if (Z_TYPE_P(property) != IS_STRING) {
+		zend_error(E_WARNING, "Property name must be a string");
+		RETURN_NULL();
+	}
+
+	retval = pmtamsg_read_property_internal(fetchPmtaMsgObject(getThis() TSRMLS_CC), property, BP_VAR_R);
 	Z_ADDREF_P(retval);
 	RETURN_ZVAL(retval, 1, 1);
 }
 
 /**
+ * @brief public function __isset($property);
  * @param ht Internally used by Zend (number of arguments)
  * @param return_value Internally used by Zend (return value)
  * @param return_value_ptr Internally used by Zend
@@ -568,11 +686,17 @@ static PHP_METHOD(PmtaMessage, __isset)
 		RETURN_NULL();
 	}
 
+	if (Z_TYPE_P(property) != IS_STRING) {
+		zend_error(E_WARNING, "Property name must be a string");
+		RETURN_NULL();
+	}
+
 	retval = pmtamsg_has_property_internal(fetchPmtaMsgObject(getThis() TSRMLS_CC), property, 1 TSRMLS_CC);
 	RETURN_BOOL(retval);
 }
 
 /**
+ * @brief public function __set($property, $value);
  * @param ht Internally used by Zend (number of arguments)
  * @param return_value Internally used by Zend (return value)
  * @param return_value_ptr Internally used by Zend
@@ -589,10 +713,16 @@ static PHP_METHOD(PmtaMessage, __set)
 		RETURN_NULL();
 	}
 
+	if (Z_TYPE_P(property) != IS_STRING) {
+		zend_error(E_WARNING, "Property name must be a string");
+		RETURN_NULL();
+	}
+
 	pmtamsg_write_property_internal(fetchPmtaMsgObject(getThis() TSRMLS_CC), property, value TSRMLS_CC);
 }
 
 /**
+ * @brief public function beginPart($number);
  * @param ht Internally used by Zend (number of arguments)
  * @param return_value Internally used by Zend (return value)
  * @param return_value_ptr Internally used by Zend
@@ -602,7 +732,7 @@ static PHP_METHOD(PmtaMessage, __set)
  */
 static PHP_METHOD(PmtaMessage, beginPart)
 {
-	struct pmtamsg_object* obj;
+	pmtamsg_object* obj;
 	long int part;
 	BOOL res;
 
@@ -616,6 +746,7 @@ static PHP_METHOD(PmtaMessage, beginPart)
 }
 
 /**
+ * @brief public function addData($string);
  * @param ht Internally used by Zend (number of arguments)
  * @param return_value Internally used by Zend (return value)
  * @param return_value_ptr Internally used by Zend
@@ -625,7 +756,7 @@ static PHP_METHOD(PmtaMessage, beginPart)
  */
 static PHP_METHOD(PmtaMessage, addData)
 {
-	struct pmtamsg_object* obj;
+	pmtamsg_object* obj;
 	char* data;
 	int data_len;
 	BOOL res;
@@ -640,6 +771,7 @@ static PHP_METHOD(PmtaMessage, addData)
 }
 
 /**
+ * @brief public function addMergeData($string);
  * @param ht Internally used by Zend (number of arguments)
  * @param return_value Internally used by Zend (return value)
  * @param return_value_ptr Internally used by Zend
@@ -649,7 +781,7 @@ static PHP_METHOD(PmtaMessage, addData)
  */
 static PHP_METHOD(PmtaMessage, addMergeData)
 {
-	struct pmtamsg_object* obj;
+	pmtamsg_object* obj;
 	char* data;
 	int data_len;
 	BOOL res;
@@ -664,6 +796,7 @@ static PHP_METHOD(PmtaMessage, addMergeData)
 }
 
 /**
+ * @brief public function addDateHeader();
  * @param ht Internally used by Zend (number of arguments)
  * @param return_value Internally used by Zend (return value)
  * @param return_value_ptr Internally used by Zend
@@ -673,7 +806,7 @@ static PHP_METHOD(PmtaMessage, addMergeData)
  */
 static PHP_METHOD(PmtaMessage, addDateHeader)
 {
-	struct pmtamsg_object* obj;
+	pmtamsg_object* obj;
 	BOOL res;
 
 	if (zend_parse_parameters_none() == FAILURE) {
@@ -686,6 +819,7 @@ static PHP_METHOD(PmtaMessage, addDateHeader)
 }
 
 /**
+ * @brief public function addRecipient(PmtaRecipient $rcpt);
  * @param ht Internally used by Zend (number of arguments)
  * @param return_value Internally used by Zend (return value)
  * @param return_value_ptr Internally used by Zend
@@ -695,7 +829,7 @@ static PHP_METHOD(PmtaMessage, addDateHeader)
  */
 static PHP_METHOD(PmtaMessage, addRecipient)
 {
-	struct pmtamsg_object* obj;
+	pmtamsg_object* obj;
 	PmtaRcpt rcpt;
 	zval* recipient;
 	BOOL res;
@@ -718,6 +852,7 @@ static PHP_METHOD(PmtaMessage, addRecipient)
 }
 
 /**
+ * @brief public function getLastError();
  * @param ht Internally used by Zend (number of arguments)
  * @param return_value Internally used by Zend (return value)
  * @param return_value_ptr Internally used by Zend
@@ -732,7 +867,7 @@ static PHP_METHOD(PmtaMessage, getLastError)
 	}
 
 	if (return_value_used) {
-		struct pmtamsg_object* obj = fetchPmtaMsgObject(getThis() TSRMLS_CC);
+		pmtamsg_object* obj = fetchPmtaMsgObject(getThis() TSRMLS_CC);
 		throw_pmta_error(pmta_error_message_class, PmtaMsgGetLastErrorType(obj->msg), PmtaMsgGetLastError(obj->msg), &return_value TSRMLS_CC);
 	}
 }
@@ -783,6 +918,7 @@ zend_function_entry pmta_msg_class_methods[] = {
 	PHP_ME(PmtaMessage, addDateHeader,    arginfo_empty,        ZEND_ACC_PUBLIC)
 	PHP_ME(PmtaMessage, addRecipient,     arginfo_addrecipient, ZEND_ACC_PUBLIC)
 	PHP_ME(PmtaMessage, getLastError,     arginfo_empty,        ZEND_ACC_PUBLIC)
+	PHP_ME_MAPPING(__destruct, empty_destructor, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_DTOR)
 	PHP_FE_END
 };
 

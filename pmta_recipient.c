@@ -118,7 +118,7 @@ typedef struct _pmtarcpt_object {
  * @brief Fetches @c pmtarcpt_object
  * @see pmtaconn_object
  * @param zobj @c PmtaRecipient instance
- * @return pmtaconn_rcpt associated with @a zobj
+ * @return pmtarcpt_object associated with @a zobj
  * @pre <tt>Z_TYPE_P(zobj) == IS_OBJECT && instanceof_function(Z_OBJCE_P(zobj), pmta_rcpt_class TSRMLS_CC)</tt>
  */
 static inline pmtarcpt_object* fetchPmtaRcptObject(zval* zobj TSRMLS_DC)
@@ -227,7 +227,7 @@ static zval* pmtarcpt_read_property(zval* object, zval* member, int type ZLK_DC 
  * @brief Internal implementation of @c __isset() method
  * @see pmtarcpt_object
  * @see pmtarcpt_has_property
- * @param obj @c pmtaconn_object
+ * @param obj @c pmtarcpt_object
  * @param member Property to read
  * @param has_set_exists Additional checks
  * @return Whether property @a member exists and satisfies @a has_set_exists criterion
@@ -523,6 +523,11 @@ static PHP_METHOD(PmtaRecipient, __get)
 		RETURN_NULL();
 	}
 
+	if (Z_TYPE_P(property) != IS_STRING) {
+		zend_error(E_WARNING, "Property name must be a string");
+		RETURN_NULL();
+	}
+
 	retval = pmtarcpt_read_property_internal(fetchPmtaRcptObject(getThis() TSRMLS_CC), property, BP_VAR_R);
 	Z_ADDREF_P(retval);
 	RETURN_ZVAL(retval, 1, 1);
@@ -546,6 +551,11 @@ static PHP_METHOD(PmtaRecipient, __isset)
 		RETURN_NULL();
 	}
 
+	if (Z_TYPE_P(property) != IS_STRING) {
+		zend_error(E_WARNING, "Property name must be a string");
+		RETURN_NULL();
+	}
+
 	retval = pmtarcpt_has_property_internal(fetchPmtaRcptObject(getThis() TSRMLS_CC), property, 1);
 	RETURN_BOOL(retval);
 }
@@ -566,6 +576,11 @@ static PHP_METHOD(PmtaRecipient, __set)
 
 	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz", &property, &value)) {
 		RETURN_NULL();
+	}
+
+	if (Z_TYPE_P(property) != IS_STRING) {
+		zend_error(E_WARNING, "Property name must be a string");
+		return;
 	}
 
 	pmtarcpt_write_property_internal(fetchPmtaRcptObject(getThis() TSRMLS_CC), property, value TSRMLS_CC);

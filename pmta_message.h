@@ -55,7 +55,7 @@ class PmtaMessage
 
 /**
  * @brief Extracts @c PmtaMsg from @c PmtaMessage object
- * @param object PmtaMessage object
+ * @param object @c PmtaMessage object
  * @param tsrm_ls Internally used by Zend
  * @return @c PmtaMsg
  */

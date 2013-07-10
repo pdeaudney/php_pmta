@@ -463,6 +463,11 @@ static PHP_METHOD(PmtaConnection, __get)
 		RETURN_NULL();
 	}
 
+	if (Z_TYPE_P(property) != IS_STRING) {
+		zend_error(E_WARNING, "Property name must be a string");
+		RETURN_NULL();
+	}
+
 	retval = pmtaconn_read_property_internal(fetchPmtaConnObject(getThis() TSRMLS_CC), property, BP_VAR_R);
 	Z_ADDREF_P(retval);
 	RETURN_ZVAL(retval, 1, 1);
@@ -483,6 +488,11 @@ static PHP_METHOD(PmtaConnection, __isset)
 	int retval;
 
 	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &property)) {
+		RETURN_NULL();
+	}
+
+	if (Z_TYPE_P(property) != IS_STRING) {
+		zend_error(E_WARNING, "Property name must be a string");
 		RETURN_NULL();
 	}
 
