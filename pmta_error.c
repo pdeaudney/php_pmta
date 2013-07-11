@@ -107,12 +107,13 @@ void pmtaerror_register_class(TSRMLS_D)
 	zend_declare_class_constant_long(pmta_error_class, ZEND_STRL("PHP_API"),          PmtaApiERROR_PHP_API         TSRMLS_CC);
 
 	INIT_CLASS_ENTRY(e, "PmtaErrorConnection", pmta_error_class_methods);
-	INIT_CLASS_ENTRY(e, "PmtaErrorRecipient", pmta_error_class_methods);
-	INIT_CLASS_ENTRY(e, "PmtaErrorMessage", pmta_error_class_methods);
-
 	pmta_error_connection_class = zend_register_internal_class_ex(&e, pmta_error_class, NULL TSRMLS_CC);
-	pmta_error_recipient_class  = zend_register_internal_class_ex(&e, pmta_error_class, NULL TSRMLS_CC);
-	pmta_error_message_class    = zend_register_internal_class_ex(&e, pmta_error_class, NULL TSRMLS_CC);
+
+	INIT_CLASS_ENTRY(e, "PmtaErrorRecipient", pmta_error_class_methods);
+	pmta_error_recipient_class = zend_register_internal_class_ex(&e, pmta_error_class, NULL TSRMLS_CC);
+
+	INIT_CLASS_ENTRY(e, "PmtaErrorMessage", pmta_error_class_methods);
+	pmta_error_message_class = zend_register_internal_class_ex(&e, pmta_error_class, NULL TSRMLS_CC);
 
 	pmta_error_connection_class->ce_flags |= ZEND_ACC_FINAL_CLASS;
 	pmta_error_recipient_class->ce_flags  |= ZEND_ACC_FINAL_CLASS;
