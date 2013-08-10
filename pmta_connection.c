@@ -348,7 +348,11 @@ static zend_object_value pmtaconn_ctor(zend_class_entry* ce TSRMLS_DC)
 	pmtaconn_object* obj = ecalloc(1, sizeof(pmtaconn_object));
 	zend_object_value retval;
 
-	zend_object_std_init(&(obj->obj), ce TSRMLS_CC);
+	zend_object_std_init(&obj->obj, ce TSRMLS_CC);
+#if PHP_VERSION_ID >= 50400
+	object_properties_init(&obj->obj, ce);
+#endif
+
 	retval.handle = zend_objects_store_put(
 		obj,
 		(zend_objects_store_dtor_t)zend_objects_destroy_object,
