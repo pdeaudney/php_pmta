@@ -7,11 +7,11 @@
  */
 
 #ifdef DOXYGEN
-#	undef PMTA_COMMON_H_
+#	undef PMTA_COMMON_H
 #endif
 
-#ifndef PMTA_COMMON_H_
-#define PMTA_COMMON_H_
+#ifndef PMTA_COMMON_H
+#define PMTA_COMMON_H
 
 #include "php_pmta.h"
 
@@ -47,4 +47,4 @@ ZEND_END_ARG_INFO()
  */
 PHPPMTA_VISIBILITY_HIDDEN PHP_FUNCTION(empty_destructor);
 
-#endif /* PMTA_COMMON_H_ */
+#endif /* PMTA_COMMON_H */

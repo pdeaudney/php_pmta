@@ -26,11 +26,11 @@ final class PmtaErrorMessage    extends PmtaError { }
  */
 
 #ifdef DOXYGEN
-#	undef PMTA_ERROR_H_
+#	undef PMTA_ERROR_H
 #endif
 
-#ifndef PMTA_ERROR_H_
-#define PMTA_ERROR_H_
+#ifndef PMTA_ERROR_H
+#define PMTA_ERROR_H
 
 #include "php_pmta.h"
 
@@ -55,4 +55,4 @@ PHPPMTA_VISIBILITY_HIDDEN extern void pmtaerror_register_class(TSRMLS_D);
  */
 PHPPMTA_VISIBILITY_HIDDEN extern void throw_pmta_error(zend_class_entry* error_class, int code, const char* message, zval** result TSRMLS_DC);
 
-#endif /* PMTA_ERROR_H_ */
+#endif /* PMTA_ERROR_H */

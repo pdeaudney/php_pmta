@@ -44,11 +44,11 @@ class PmtaMessage
  */
 
 #ifdef DOXYGEN
-#	undef PMTA_MESSAGE_H_
+#	undef PMTA_MESSAGE_H
 #endif
 
-#ifndef PMTA_MESSAGE_H_
-#define PMTA_MESSAGE_H_
+#ifndef PMTA_MESSAGE_H
+#define PMTA_MESSAGE_H
 
 #include "php_pmta.h"
 #include <submitter/PmtaMsg.h>
@@ -67,4 +67,4 @@ PHPPMTA_VISIBILITY_HIDDEN extern PmtaMsg getMessage(zval* object TSRMLS_DC);
  */
 PHPPMTA_VISIBILITY_HIDDEN extern void pmtamsg_register_class(TSRMLS_D);
 
-#endif /* PMTA_MESSAGE_H_ */
+#endif /* PMTA_MESSAGE_H */

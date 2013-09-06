@@ -15,8 +15,8 @@
 #	undef PHP_PMTA_H_
 #endif
 
-#ifndef PHP_PMTA_H_
-#define PHP_PMTA_H_
+#ifndef PHP_PMTA_H
+#define PHP_PMTA_H
 
 /**
  * @headerfile php_pmta.h
@@ -131,4 +131,4 @@ ZEND_END_MODULE_GLOBALS(pmta);
  */
 PHPPMTA_VISIBILITY_HIDDEN extern ZEND_DECLARE_MODULE_GLOBALS(pmta);
 
-#endif /* PHP_PMTA_H_ */
+#endif /* PHP_PMTA_H */

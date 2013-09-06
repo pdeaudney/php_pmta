@@ -35,11 +35,11 @@ class PmtaRecipient
  */
 
 #ifdef DOXYGEN
-#	undef PMTA_RECIPIENT_H_
+#	undef PMTA_RECIPIENT_H
 #endif
 
-#ifndef PMTA_RECIPIENT_H_
-#define PMTA_RECIPIENT_H_
+#ifndef PMTA_RECIPIENT_H
+#define PMTA_RECIPIENT_H
 
 #include "php_pmta.h"
 #include <submitter/PmtaRcpt.h>
@@ -65,4 +65,4 @@ PHPPMTA_VISIBILITY_HIDDEN extern void lock_recipient(zval* object TSRMLS_DC);
  */
 PHPPMTA_VISIBILITY_HIDDEN extern void pmtarcpt_register_class(TSRMLS_D);
 
-#endif /* PMTA_RECIPIENT_H_ */
+#endif /* PMTA_RECIPIENT_H */

@@ -31,11 +31,11 @@ class PmtaConnection
  */
 
 #ifdef DOXYGEN
-#	undef PMTA_CONNECTION_H_
+#	undef PMTA_CONNECTION_H
 #endif
 
-#ifndef PMTA_CONNECTION_H_
-#define PMTA_CONNECTION_H_
+#ifndef PMTA_CONNECTION_H
+#define PMTA_CONNECTION_H
 
 #include "php_pmta.h"
 
@@ -45,4 +45,4 @@ class PmtaConnection
  */
 PHPPMTA_VISIBILITY_HIDDEN extern void pmtaconn_register_class(TSRMLS_D);
 
-#endif /* PMTA_CONNECTION_H_ */
+#endif /* PMTA_CONNECTION_H */
