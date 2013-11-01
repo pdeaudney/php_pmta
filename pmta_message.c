@@ -188,7 +188,7 @@ PmtaMsg getMessage(zval* object TSRMLS_DC)
 static zval* pmtamsg_read_property_internal(pmtamsg_object* obj, zval* member, int type)
 {
 	zval* ret;
-	ALLOC_INIT_ZVAL(ret);
+	MAKE_STD_ZVAL(ret);
 
 	if (ISSTR(member, "originator")) {
 		ZVAL_STRING(ret, obj->originator, 1);
@@ -508,42 +508,42 @@ static HashTable* pmtamsg_get_properties(zval* object TSRMLS_DC)
 	zval* tmp;
 
 	if (obj->originator) {
-		ALLOC_INIT_ZVAL(zv);
+		MAKE_STD_ZVAL(zv);
 		ZVAL_STRING(zv, obj->originator, 1);
 		zend_hash_update(props, "originator", sizeof("originator"), &zv, sizeof(zval*), NULL);
 	}
 
 	if (obj->envid) {
-		ALLOC_INIT_ZVAL(zv);
+		MAKE_STD_ZVAL(zv);
 		ZVAL_STRING(zv, obj->envid, 1);
 		zend_hash_update(props, "envelope_id", sizeof("envelope_id"), &zv, sizeof(zval*), NULL);
 	}
 
 	if (obj->vmta) {
-		ALLOC_INIT_ZVAL(zv);
+		MAKE_STD_ZVAL(zv);
 		ZVAL_STRING(zv, obj->vmta, 1);
 		zend_hash_update(props, "vmta", sizeof("vmta"), &zv, sizeof(zval*), NULL);
 	}
 
 	if (obj->jobid) {
-		ALLOC_INIT_ZVAL(zv);
+		MAKE_STD_ZVAL(zv);
 		ZVAL_STRING(zv, obj->jobid, 1);
 		zend_hash_update(props, "jobid", sizeof("jobid"), &zv, sizeof(zval*), NULL);
 	}
 
-	ALLOC_INIT_ZVAL(zv);
+	MAKE_STD_ZVAL(zv);
 	ZVAL_LONG(zv, obj->rettype);
 	zend_hash_update(props, "return_type", sizeof("return_type"), &zv, sizeof(zval*), NULL);
 
-	ALLOC_INIT_ZVAL(zv);
+	MAKE_STD_ZVAL(zv);
 	ZVAL_LONG(zv, obj->encoding);
 	zend_hash_update(props, "encoding", sizeof("encoding"), &zv, sizeof(zval*), NULL);
 
-	ALLOC_INIT_ZVAL(zv);
+	MAKE_STD_ZVAL(zv);
 	ZVAL_LONG(zv, obj->verp);
 	zend_hash_update(props, "verp", sizeof("verp"), &zv, sizeof(zval*), NULL);
 
-	ALLOC_INIT_ZVAL(zv);
+	MAKE_STD_ZVAL(zv);
 	array_init_size(zv, zend_hash_num_elements(obj->recipients));
 	zend_hash_copy(Z_ARRVAL_P(zv), obj->recipients, (copy_ctor_func_t)zval_add_ref, (void*)&tmp, sizeof(zval*));
 	zend_hash_update(props, "recipients", sizeof("recipients"), (void*)&zv, sizeof(zval*), NULL);
