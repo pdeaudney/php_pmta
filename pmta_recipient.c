@@ -163,7 +163,7 @@ void lock_recipient(zval* object TSRMLS_DC)
 static zval* pmtarcpt_read_property_internal(pmtarcpt_object* obj, zval* member, int type)
 {
 	zval* ret;
-	ALLOC_INIT_ZVAL(ret);
+	MAKE_STD_ZVAL(ret);
 
 	if (ISSTR(member, "address")) {
 		ZVAL_STRING(ret, obj->address, 1);
@@ -399,16 +399,16 @@ static HashTable* pmtarcpt_get_properties(zval* object TSRMLS_DC)
 	zval* tmp;
 
 	if (obj->address) {
-		ALLOC_INIT_ZVAL(zv);
+		MAKE_STD_ZVAL(zv);
 		ZVAL_STRING(zv, obj->address, 1);
 		zend_hash_update(props, "address", sizeof("address"), &zv, sizeof(zval*), NULL);
 	}
 
-	ALLOC_INIT_ZVAL(zv);
+	MAKE_STD_ZVAL(zv);
 	ZVAL_LONG(zv, obj->notify);
 	zend_hash_update(props, "notify", sizeof("notify"), &zv, sizeof(zval*), NULL);
 
-	ALLOC_INIT_ZVAL(zv);
+	MAKE_STD_ZVAL(zv);
 	array_init_size(zv, zend_hash_num_elements(obj->vars));
 	zend_hash_copy(Z_ARRVAL_P(zv), obj->vars, (copy_ctor_func_t)zval_add_ref, (void*)&tmp, sizeof(zval*));
 	zend_hash_update(props, "variables", sizeof("variables"), (void*)&zv, sizeof(zval*), NULL);
@@ -621,7 +621,7 @@ static PHP_METHOD(PmtaRecipient, defineVariable)
 	res = PmtaRcptDefineVariable(obj->rcpt, name, value);
 	if (TRUE == res) {
 		zval* tmp;
-		ALLOC_INIT_ZVAL(tmp);
+		MAKE_STD_ZVAL(tmp);
 		ZVAL_STRINGL(tmp, value, value_len, 1);
 		zend_symtable_update(obj->vars, name, name_len + 1, (void*)&tmp, sizeof(zval*), NULL);
 		RETURN_TRUE;
