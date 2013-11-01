@@ -125,7 +125,7 @@ static inline pmtaconn_object* fetchPmtaConnObject(zval* zobj TSRMLS_DC)
 static zval* pmtaconn_read_property_internal(pmtaconn_object* obj, zval* member, int type)
 {
 	zval* ret;
-	ALLOC_INIT_ZVAL(ret);
+	MAKE_STD_ZVAL(ret);
 
 	if (ISSTR(member, "server")) {
 		ZVAL_STRING(ret, obj->server, 1);
@@ -293,24 +293,24 @@ static HashTable* pmtaconn_get_properties(zval* object TSRMLS_DC)
 	zval* zv;
 
 	if (obj->server) {
-		ALLOC_INIT_ZVAL(zv);
+		MAKE_STD_ZVAL(zv);
 		ZVAL_STRING(zv, obj->server, 1);
 		zend_hash_update(props, "server", sizeof("server"), &zv, sizeof(zval*), NULL);
 	}
 
 	if (obj->username) {
-		ALLOC_INIT_ZVAL(zv);
+		MAKE_STD_ZVAL(zv);
 		ZVAL_STRING(zv, obj->username, 1);
 		zend_hash_update(props, "username", sizeof("username"), &zv, sizeof(zval*), NULL);
 	}
 
 	if (obj->password) {
-		ALLOC_INIT_ZVAL(zv);
+		MAKE_STD_ZVAL(zv);
 		ZVAL_STRING(zv, obj->password, 1);
 		zend_hash_update(props, "password", sizeof("password"), &zv, sizeof(zval*), NULL);
 	}
 
-	ALLOC_INIT_ZVAL(zv);
+	MAKE_STD_ZVAL(zv);
 	ZVAL_LONG(zv, obj->port);
 	zend_hash_update(props, "port", sizeof("port"), &zv, sizeof(zval*), NULL);
 
