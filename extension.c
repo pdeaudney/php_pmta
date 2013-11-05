@@ -35,9 +35,6 @@ PHP_INI_BEGIN()
 	STD_PHP_INI_ENTRY("pmta.password", NULL, PHP_INI_ALL, OnUpdateString, password, zend_pmta_globals, pmta_globals)
 PHP_INI_END()
 
-int le_pmta_message;
-int le_pmta_recipient;
-
 zend_class_entry* pmta_error_connection_class;
 zend_class_entry* pmta_error_recipient_class;
 zend_class_entry* pmta_error_message_class;
