@@ -668,8 +668,7 @@ static PHP_METHOD(PmtaMessage, __get)
 	}
 
 	retval = pmtamsg_read_property_internal(fetchPmtaMsgObject(getThis() TSRMLS_CC), property, BP_VAR_R);
-	Z_ADDREF_P(retval);
-	RETURN_ZVAL(retval, 1, 1);
+	RETURN_ZVAL(retval, 1, 0);
 }
 
 /**

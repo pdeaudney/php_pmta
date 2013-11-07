@@ -473,8 +473,7 @@ static PHP_METHOD(PmtaConnection, __get)
 	}
 
 	retval = pmtaconn_read_property_internal(fetchPmtaConnObject(getThis() TSRMLS_CC), property, BP_VAR_R);
-	Z_ADDREF_P(retval);
-	RETURN_ZVAL(retval, 1, 1);
+	RETURN_ZVAL(retval, 1, 0);
 }
 
 /**
